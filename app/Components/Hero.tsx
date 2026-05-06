@@ -1,4 +1,4 @@
-import React from "react";
+import Link from "next/link";
 import { FaArrowRight, FaStar } from "react-icons/fa";
 
 export default function Hero() {
@@ -29,9 +29,9 @@ export default function Hero() {
             <button className="bg-emerald-800 hover:bg-emerald-900 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-2 transition-colors shadow-lg shadow-emerald-800/30">
               Shop Now <FaArrowRight />
             </button>
-            <a href="#" className="text-gray-600 font-medium hover:text-emerald-800 transition-colors underline underline-offset-4 decoration-2 decoration-gray-300 hover:decoration-emerald-800">
+            <Link href="/Products" className="text-gray-600 font-medium hover:text-emerald-800 transition-colors underline underline-offset-4 decoration-2 decoration-gray-300 hover:decoration-emerald-800">
               View All Products
-            </a>
+            </Link>
           </div>
 
           {/* Ratings */}

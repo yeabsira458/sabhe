@@ -32,6 +32,12 @@ const Header = () => {
         <Link href="/Contact" className={getLinkClass("/Contact")}>
           Contact
         </Link>
+        <Link 
+          href="/Login" 
+          className="ml-4 px-6 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-full transition-colors border border-emerald-600 shadow-sm"
+        >
+          Login
+        </Link>
       </nav>
     </header>
   );

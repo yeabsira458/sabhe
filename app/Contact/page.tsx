@@ -6,10 +6,11 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] pt-24">
       {/* Page Header */}
-      <div className="bg-emerald-800 text-white py-16 px-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
-        <p className="text-emerald-100 max-w-2xl mx-auto">
-          We'd love to hear from you. Whether you have a question about our products, pricing, or anything else, our team is ready to answer all your questions.
+      <div className="pt-8 pb-4 px-8 text-center">
+        <span className="text-emerald-800 font-bold tracking-widest uppercase text-sm mb-2 block">We're Here To Help</span>
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Contact Us</h1>
+        <p className="text-gray-500 max-w-xl mx-auto">
+          Whether you have a question about our products, pricing, or anything else, our team is ready to answer all your questions.
         </p>
       </div>
       
