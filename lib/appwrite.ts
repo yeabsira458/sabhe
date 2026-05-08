@@ -1,42 +1,48 @@
-import { Client, Databases, Account, Storage, ID, Query } from "appwrite";
+import {
+  Client,
+  Databases,
+  Account,
+  Storage,
+  ID,
+  Query,
+  Permission,
+  Role,
+} from "appwrite";
 
-// ─── Client ────────────────────────────────────────────────────────────────
+// ─── Client ─────────────────────────────────────────────────────────────────
+// Next.js automatically loads .env.local — no dotenv import needed.
 const client = new Client()
-  .setEndpoint(
-    process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://fra.cloud.appwrite.io/v1"
-  )
-  .setProject(
-    process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "69fad27100189847d507"
-  );
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
-export const account = new Account(client);
+export const account   = new Account(client);
 export const databases = new Databases(client);
-export const storage = new Storage(client);
+export const storage   = new Storage(client);
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "database-69fad4ec001a1f46c410";
-export const PRODUCTS_COLLECTION_ID = "products";
-export const CATEGORIES_COLLECTION_ID = "categories";
-export const PRODUCT_IMAGES_BUCKET_ID = "product_images";
-export const USERS_COLLECTION_ID = "users";
-export const ORDERS_COLLECTION_ID = "orders";
+// ─── Constants ──────────────────────────────────────────────────────────────
+export const DATABASE_ID            = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+export const PRODUCTS_COLLECTION_ID    = "products";
+export const CATEGORIES_COLLECTION_ID  = "catagories"; // matches actual Appwrite collection ID
+export const PRODUCT_IMAGES_BUCKET_ID  = "product_images";
+export const USERS_COLLECTION_ID       = "users";
+export const ORDERS_COLLECTION_ID      = "orders";
 export const ORDER_ITEMS_COLLECTION_ID = "order_items";
-export const CART_COLLECTION_ID = "cart";
-export const REVIEWS_COLLECTION_ID = "reviews";
-export const WISHLIST_COLLECTION_ID = "wishlist";
+export const CART_COLLECTION_ID        = "cart";
+export const REVIEWS_COLLECTION_ID     = "reviews";
+export const WISHLIST_COLLECTION_ID    = "wishlist";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 export interface AppwriteProduct {
   $id: string;
   title: string;
   description: string;
   price: number;
-  image: string;       // URL or storage file ID
-  category: string;    // matches Category.slug
+  image: string;
+  category: string;
   inStock: boolean;
   featured: boolean;
-  discount: number;    // percentage 0-100
-  rating: number;      // 0.0-5.0
+  discount: number;
+  rating: number;
 }
 
 export interface AppwriteCategory {
@@ -105,7 +111,7 @@ export interface AppwriteWishlistItem {
   productId: string;
 }
 
-// ─── Products ───────────────────────────────────────────────────────────────
+// ─── Products ────────────────────────────────────────────────────────────────
 export async function getProducts(categorySlug?: string): Promise<AppwriteProduct[]> {
   try {
     const queries: string[] = [Query.limit(100)];
@@ -143,7 +149,7 @@ export async function getFeaturedProducts(): Promise<AppwriteProduct[]> {
   }
 }
 
-// ─── Categories ─────────────────────────────────────────────────────────────
+// ─── Categories ──────────────────────────────────────────────────────────────
 export async function getCategories(): Promise<AppwriteCategory[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, CATEGORIES_COLLECTION_ID, [
@@ -170,7 +176,7 @@ export async function getCategoryBySlug(slug: string): Promise<AppwriteCategory 
   }
 }
 
-// ─── Auth ───────────────────────────────────────────────────────────────────
+// ─── Auth ────────────────────────────────────────────────────────────────────
 export async function getCurrentUser() {
   try {
     return await account.get();
@@ -179,7 +185,7 @@ export async function getCurrentUser() {
   }
 }
 
-// ─── User Profiles ──────────────────────────────────────────────────────────
+// ─── User Profiles ───────────────────────────────────────────────────────────
 export async function getUserProfile(authId: string): Promise<AppwriteUser | null> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, USERS_COLLECTION_ID, [
@@ -194,23 +200,50 @@ export async function getUserProfile(authId: string): Promise<AppwriteUser | nul
   }
 }
 
+/**
+ * Creates a user profile document in the `users` collection.
+ * Grants the authenticated user read/update access to their own document.
+ */
 export async function createUserProfile(data: {
-  authId: string; name: string; email: string;
-  phone?: string; avatar?: string; address?: string; city?: string;
+  authId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  address?: string;
+  city?: string;
 }): Promise<AppwriteUser | null> {
   try {
-    const doc = await databases.createDocument(DATABASE_ID, USERS_COLLECTION_ID, ID.unique(), {
-      ...data, phone: data.phone || "", avatar: data.avatar || "",
-      address: data.address || "", city: data.city || "", role: "customer",
-    });
+    const doc = await databases.createDocument(
+      DATABASE_ID,
+      USERS_COLLECTION_ID,
+      ID.unique(),
+      {
+        authId:  data.authId,
+        name:    data.name,
+        email:   data.email,
+        phone:   data.phone   || "",
+        avatar:  data.avatar  || "",
+        address: data.address || "",
+        city:    data.city    || "",
+        role:    "customer",
+      },
+      [
+        Permission.read(Role.user(data.authId)),
+        Permission.update(Role.user(data.authId)),
+      ]
+    );
     return doc as unknown as AppwriteUser;
   } catch (error) {
     console.error("createUserProfile error:", error);
-    return null;
+    throw error; // re-throw so the caller (AuthSync) can log it
   }
 }
 
-export async function updateUserProfile(docId: string, data: Partial<Omit<AppwriteUser, "$id" | "authId" | "role">>): Promise<AppwriteUser | null> {
+export async function updateUserProfile(
+  docId: string,
+  data: Partial<Omit<AppwriteUser, "$id" | "authId" | "role">>
+): Promise<AppwriteUser | null> {
   try {
     const doc = await databases.updateDocument(DATABASE_ID, USERS_COLLECTION_ID, docId, data);
     return doc as unknown as AppwriteUser;
@@ -220,11 +253,12 @@ export async function updateUserProfile(docId: string, data: Partial<Omit<Appwri
   }
 }
 
-// ─── Cart ───────────────────────────────────────────────────────────────────
+// ─── Cart ────────────────────────────────────────────────────────────────────
 export async function getCartItems(userId: string): Promise<AppwriteCartItem[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, CART_COLLECTION_ID, [
-      Query.equal("userId", userId), Query.limit(100),
+      Query.equal("userId", userId),
+      Query.limit(100),
     ]);
     return res.documents as unknown as AppwriteCartItem[];
   } catch (error) {
@@ -233,11 +267,16 @@ export async function getCartItems(userId: string): Promise<AppwriteCartItem[]> 
   }
 }
 
-export async function addToCart(userId: string, productId: string, quantity = 1): Promise<AppwriteCartItem | null> {
+export async function addToCart(
+  userId: string,
+  productId: string,
+  quantity = 1
+): Promise<AppwriteCartItem | null> {
   try {
-    // Check if already in cart
     const existing = await databases.listDocuments(DATABASE_ID, CART_COLLECTION_ID, [
-      Query.equal("userId", userId), Query.equal("productId", productId), Query.limit(1),
+      Query.equal("userId", userId),
+      Query.equal("productId", productId),
+      Query.limit(1),
     ]);
     if (existing.documents.length > 0) {
       const doc = existing.documents[0];
@@ -246,7 +285,9 @@ export async function addToCart(userId: string, productId: string, quantity = 1)
       });
       return updated as unknown as AppwriteCartItem;
     }
-    const doc = await databases.createDocument(DATABASE_ID, CART_COLLECTION_ID, ID.unique(), { userId, productId, quantity });
+    const doc = await databases.createDocument(DATABASE_ID, CART_COLLECTION_ID, ID.unique(), {
+      userId, productId, quantity,
+    });
     return doc as unknown as AppwriteCartItem;
   } catch (error) {
     console.error("addToCart error:", error);
@@ -274,15 +315,22 @@ export async function removeFromCart(docId: string): Promise<boolean> {
   }
 }
 
-// ─── Orders ─────────────────────────────────────────────────────────────────
+// ─── Orders ──────────────────────────────────────────────────────────────────
 export async function createOrder(data: {
-  userId: string; totalAmount: number; shippingAddress: string;
-  shippingCity: string; phone: string;
-  paymentMethod?: string; note?: string;
+  userId: string;
+  totalAmount: number;
+  shippingAddress: string;
+  shippingCity: string;
+  phone: string;
+  paymentMethod?: string;
+  note?: string;
 }): Promise<AppwriteOrder | null> {
   try {
     const doc = await databases.createDocument(DATABASE_ID, ORDERS_COLLECTION_ID, ID.unique(), {
-      ...data, status: "pending", paymentMethod: data.paymentMethod || "cash", note: data.note || "",
+      ...data,
+      status: "pending",
+      paymentMethod: data.paymentMethod || "cash",
+      note: data.note || "",
     });
     return doc as unknown as AppwriteOrder;
   } catch (error) {
@@ -294,7 +342,9 @@ export async function createOrder(data: {
 export async function getUserOrders(userId: string): Promise<AppwriteOrder[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, ORDERS_COLLECTION_ID, [
-      Query.equal("userId", userId), Query.orderDesc("$createdAt"), Query.limit(50),
+      Query.equal("userId", userId),
+      Query.orderDesc("$createdAt"),
+      Query.limit(50),
     ]);
     return res.documents as unknown as AppwriteOrder[];
   } catch (error) {
@@ -304,12 +354,17 @@ export async function getUserOrders(userId: string): Promise<AppwriteOrder[]> {
 }
 
 export async function createOrderItem(data: {
-  orderId: string; productId: string; title: string;
-  price: number; quantity: number; image?: string;
+  orderId: string;
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  image?: string;
 }): Promise<AppwriteOrderItem | null> {
   try {
     const doc = await databases.createDocument(DATABASE_ID, ORDER_ITEMS_COLLECTION_ID, ID.unique(), {
-      ...data, image: data.image || "",
+      ...data,
+      image: data.image || "",
     });
     return doc as unknown as AppwriteOrderItem;
   } catch (error) {
@@ -321,7 +376,8 @@ export async function createOrderItem(data: {
 export async function getOrderItems(orderId: string): Promise<AppwriteOrderItem[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, ORDER_ITEMS_COLLECTION_ID, [
-      Query.equal("orderId", orderId), Query.limit(100),
+      Query.equal("orderId", orderId),
+      Query.limit(100),
     ]);
     return res.documents as unknown as AppwriteOrderItem[];
   } catch (error) {
@@ -330,11 +386,13 @@ export async function getOrderItems(orderId: string): Promise<AppwriteOrderItem[
   }
 }
 
-// ─── Reviews ────────────────────────────────────────────────────────────────
+// ─── Reviews ─────────────────────────────────────────────────────────────────
 export async function getProductReviews(productId: string): Promise<AppwriteReview[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, REVIEWS_COLLECTION_ID, [
-      Query.equal("productId", productId), Query.orderDesc("$createdAt"), Query.limit(50),
+      Query.equal("productId", productId),
+      Query.orderDesc("$createdAt"),
+      Query.limit(50),
     ]);
     return res.documents as unknown as AppwriteReview[];
   } catch (error) {
@@ -344,11 +402,16 @@ export async function getProductReviews(productId: string): Promise<AppwriteRevi
 }
 
 export async function createReview(data: {
-  userId: string; productId: string; userName: string; rating: number; comment?: string;
+  userId: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  comment?: string;
 }): Promise<AppwriteReview | null> {
   try {
     const doc = await databases.createDocument(DATABASE_ID, REVIEWS_COLLECTION_ID, ID.unique(), {
-      ...data, comment: data.comment || "",
+      ...data,
+      comment: data.comment || "",
     });
     return doc as unknown as AppwriteReview;
   } catch (error) {
@@ -357,11 +420,12 @@ export async function createReview(data: {
   }
 }
 
-// ─── Wishlist ───────────────────────────────────────────────────────────────
+// ─── Wishlist ─────────────────────────────────────────────────────────────────
 export async function getWishlist(userId: string): Promise<AppwriteWishlistItem[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, WISHLIST_COLLECTION_ID, [
-      Query.equal("userId", userId), Query.limit(100),
+      Query.equal("userId", userId),
+      Query.limit(100),
     ]);
     return res.documents as unknown as AppwriteWishlistItem[];
   } catch (error) {
@@ -370,16 +434,23 @@ export async function getWishlist(userId: string): Promise<AppwriteWishlistItem[
   }
 }
 
-export async function toggleWishlist(userId: string, productId: string): Promise<{ added: boolean }> {
+export async function toggleWishlist(
+  userId: string,
+  productId: string
+): Promise<{ added: boolean }> {
   try {
     const existing = await databases.listDocuments(DATABASE_ID, WISHLIST_COLLECTION_ID, [
-      Query.equal("userId", userId), Query.equal("productId", productId), Query.limit(1),
+      Query.equal("userId", userId),
+      Query.equal("productId", productId),
+      Query.limit(1),
     ]);
     if (existing.documents.length > 0) {
       await databases.deleteDocument(DATABASE_ID, WISHLIST_COLLECTION_ID, existing.documents[0].$id);
       return { added: false };
     }
-    await databases.createDocument(DATABASE_ID, WISHLIST_COLLECTION_ID, ID.unique(), { userId, productId });
+    await databases.createDocument(DATABASE_ID, WISHLIST_COLLECTION_ID, ID.unique(), {
+      userId, productId,
+    });
     return { added: true };
   } catch (error) {
     console.error("toggleWishlist error:", error);
@@ -388,4 +459,3 @@ export async function toggleWishlist(userId: string, productId: string): Promise
 }
 
 export { ID, Query };
-
