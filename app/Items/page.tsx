@@ -101,8 +101,14 @@ export default function ItemsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setSuccess("");
     setError("");
+    setSuccess("");
+
+    if (!imageFile) {
+      setError("Please upload a product photo before adding to inventory.");
+      setSubmitting(false);
+      return;
+    }
 
     try {
       // 1. Upload image to Appwrite Storage bucket 69fddb13000e96d29eac
@@ -267,7 +273,7 @@ export default function ItemsPage() {
                   Price (ETB) <span className="text-red-400">*</span>
                 </label>
                 <input
-                  required type="number" min={0} step="0.01"
+                  required type="number" min={0} max={1000000} step="0.01"
                   placeholder="e.g. 12500"
                   value={formData.price || ""}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white outline-none focus:ring-2 focus:ring-emerald-500 placeholder-gray-600"
