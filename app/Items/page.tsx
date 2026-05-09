@@ -352,7 +352,7 @@ export default function ItemsPage() {
                   />
                   <div className="text-xs text-gray-500 mt-2 space-y-1">
                     <p>📁 {imageFile?.name}</p>
-                    <p>📦 Bucket: <span className="text-emerald-400 font-mono">69fddb13000e96d29eac</span></p>
+                    <p>📦 Bucket: <span className="text-emerald-400 font-mono">{PRODUCT_IMAGES_BUCKET_ID}</span></p>
                     <p className="text-gray-600">URL will be saved to <span className="text-white font-mono">image</span> attribute</p>
                   </div>
                 </div>

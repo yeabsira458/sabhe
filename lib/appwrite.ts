@@ -11,15 +11,15 @@ export const storage = new Storage(client);
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
-export const PRODUCTS_COLLECTION_ID = "products";
-export const CATEGORIES_COLLECTION_ID = "catagories"; // matches actual collection ID
-export const PRODUCT_IMAGES_BUCKET_ID = "69fddb13000e96d29eac";
-export const USERS_COLLECTION_ID = "users";
-export const ORDERS_COLLECTION_ID = "orders";
-export const ORDER_ITEMS_COLLECTION_ID = "order_items";
-export const CART_COLLECTION_ID = "cart";
-export const REVIEWS_COLLECTION_ID = "reviews";
-export const WISHLIST_COLLECTION_ID = "wishlist";
+export const PRODUCTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_PRODUCTS_COLLECTION_ID!;
+export const CATEGORIES_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_CATEGORIES_COLLECTION_ID!; 
+export const PRODUCT_IMAGES_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_PRODUCT_IMAGES_BUCKET_ID!;
+export const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!;
+export const ORDERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ORDERS_COLLECTION_ID!;
+export const ORDER_ITEMS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_ORDER_ITEMS_COLLECTION_ID!;
+export const CART_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_CART_COLLECTION_ID!;
+export const REVIEWS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_REVIEWS_COLLECTION_ID!;
+export const WISHLIST_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_WISHLIST_COLLECTION_ID!;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface AppwriteProduct {
