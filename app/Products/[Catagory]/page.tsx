@@ -27,7 +27,7 @@ function SkeletonCard() {
 function toProduct(doc: AppwriteProduct): Product {
   return {
     id: doc.$id,
-    title: doc.title,
+    title: doc.productName,
     description: doc.description,
     price: doc.price,
     image: doc.image,

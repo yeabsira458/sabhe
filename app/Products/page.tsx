@@ -4,18 +4,81 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Footer from "../Components/Footer";
 import Newsletter from "../Components/Newsletter";
-import { getCategories, AppwriteCategory } from "../../lib/appwrite";
+import { getCategories, getProducts, AppwriteCategory, AppwriteProduct } from "../../lib/appwrite";
 import Image from "next/image";
+
+function CategoryCard({ category, products }: { category: AppwriteCategory; products: AppwriteProduct[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Filter products that have images
+  const validProducts = products.filter((p) => p.image);
+
+  useEffect(() => {
+    if (validProducts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % validProducts.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [validProducts.length]);
+
+  const categoryName = category.categoryName || "Unknown";
+
+  // Decide which image to show:
+  // 1. If we have products with images, cycle through them
+  // 2. Otherwise fallback to the category's own iconUrl
+  const currentImage =
+    validProducts.length > 0 ? validProducts[currentIndex].image : category.iconUrl;
+
+  return (
+    <Link
+      href={`/Products/${categoryName.toLowerCase()}`}
+      className="group relative block aspect-square overflow-hidden bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500"
+    >
+      {currentImage ? (
+        <img
+          src={currentImage}
+          alt={categoryName}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+        />
+      ) : (
+        <div className="absolute inset-0 w-full h-full bg-gray-100 flex items-center justify-center">
+          <span className="text-gray-400 font-light">Sem imagem</span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute bottom-0 left-0 p-8 w-full">
+        <h2 className="text-3xl font-extralight tracking-tight text-white mb-2">
+          {categoryName}
+        </h2>
+        {category.description && (
+          <p className="text-sm font-light text-white/80 line-clamp-2">
+            {category.description}
+          </p>
+        )}
+        <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-2 group-hover:translate-y-0">
+          {validProducts.length} Peças • Explorar →
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 export default function ProductsPage() {
   const [categories, setCategories] = useState<AppwriteCategory[]>([]);
+  const [allProducts, setAllProducts] = useState<AppwriteProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const docs = await getCategories();
-        setCategories(docs);
+        const [cats, prods] = await Promise.all([
+          getCategories(),
+          getProducts(), // fetch all products to show their images
+        ]);
+        setCategories(cats);
+        setAllProducts(prods);
       } catch (err) {
         console.error(err);
       } finally {
@@ -59,38 +122,18 @@ export default function ProductsPage() {
                 <div key={i} className="aspect-square bg-gray-200 animate-pulse rounded-2xl" />
               ))
             : categories.map((category) => {
-                // Use categoryName based on the Appwrite schema
-                const categoryName = category.categoryName || "Unknown";
-                
+                const categoryName = category.categoryName || "";
+                // Find products belonging to this specific category
+                const categoryProducts = allProducts.filter(
+                  (p) => p.category.toLowerCase() === categoryName.toLowerCase()
+                );
+
                 return (
-                  <Link 
-                    href={`/Products/${categoryName.toLowerCase()}`} 
+                  <CategoryCard
                     key={category.$id}
-                    className="group relative block aspect-square overflow-hidden bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500"
-                  >
-                    {category.iconUrl ? (
-                      <img 
-                        src={category.iconUrl} 
-                        alt={categoryName} 
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                      />
-                    ) : (
-                      <div className="absolute inset-0 w-full h-full bg-gray-100 flex items-center justify-center">
-                        <span className="text-gray-400 font-light">Sem imagem</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="absolute bottom-0 left-0 p-8 w-full">
-                      <h2 className="text-3xl font-extralight tracking-tight text-white mb-2">
-                        {categoryName}
-                      </h2>
-                      {category.description && (
-                        <p className="text-sm font-light text-white/80 line-clamp-2">
-                          {category.description}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
+                    category={category}
+                    products={categoryProducts}
+                  />
                 );
               })}
         </div>

@@ -13,7 +13,7 @@ import {
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type ProductRow = {
   $id: string;
-  title: string;
+  productName: string;
   price: number;
   category: string;
   inStock: boolean;
@@ -76,7 +76,7 @@ export default function ItemsPage() {
       const cats = await getCategories();
       setCategories(cats);
       if (cats.length > 0) {
-        setFormData((f) => ({ ...f, category: cats[0].slug }));
+        setFormData((f) => ({ ...f, category: (cats[0].categoryName || "").toLowerCase() }));
       }
     } catch (e) { console.error(e); }
   }
@@ -125,7 +125,7 @@ export default function ItemsPage() {
         PRODUCTS_COLLECTION_ID,
         ID.unique(),
         {
-          title:       formData.title,
+          productName: formData.title,
           description: formData.description,
           price:       formData.price,
           image:       imageUrl,        // URL from storage bucket
@@ -239,11 +239,14 @@ export default function ItemsPage() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   >
                     <option value="">— Select category —</option>
-                    {categories.map((c) => (
-                      <option key={c.$id} value={c.slug}>
-                        {c.name} ({c.slug})
-                      </option>
-                    ))}
+                    {categories.map((c) => {
+                      const catName = c.categoryName || "Unknown";
+                      return (
+                        <option key={c.$id} value={catName.toLowerCase()}>
+                          {catName}
+                        </option>
+                      );
+                    })}
                   </select>
                 ) : (
                   <input
@@ -398,11 +401,11 @@ export default function ItemsPage() {
                   <tr key={p.$id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
                       {p.image
-                        ? <img src={p.image} alt={p.title} className="w-12 h-12 object-cover rounded-lg border border-white/10" />
+                        ? <img src={p.image} alt={p.productName} className="w-12 h-12 object-cover rounded-lg border border-white/10" />
                         : <div className="w-12 h-12 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center text-gray-600 text-xs">No img</div>
                       }
                     </td>
-                    <td className="px-6 py-4 text-white font-medium max-w-[180px] truncate">{p.title}</td>
+                    <td className="px-6 py-4 text-white font-medium max-w-[180px] truncate">{p.productName}</td>
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 bg-white/5 rounded-lg text-gray-300 font-mono text-xs">{p.category}</span>
                     </td>
@@ -426,7 +429,7 @@ export default function ItemsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => deleteItem(p.$id, p.title)}
+                        onClick={() => deleteItem(p.$id, p.productName)}
                         className="text-red-500 hover:text-red-400 text-xs font-bold transition-colors"
                       >
                         Delete

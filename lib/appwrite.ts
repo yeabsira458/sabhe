@@ -24,7 +24,7 @@ export const WISHLIST_COLLECTION_ID = "wishlist";
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface AppwriteProduct {
   $id: string;
-  title: string;       // required
+  productName: string; // required
   description: string; // required
   price: number;       // required
   image: string;       // required — URL from storage bucket 69fddb13000e96d29eac
