@@ -57,9 +57,9 @@ export default function CollectionsPage() {
   useEffect(() => {
     getCategories().then((cats: AppwriteCategory[]) => {
       if (cats.length > 0) {
-        const names = cats.map(
-          (c) => c.name.charAt(0).toUpperCase() + c.name.slice(1)
-        );
+        const names = cats
+          .filter(c => c.categoryName)
+          .map(c => c.categoryName.charAt(0).toUpperCase() + c.categoryName.slice(1));
         setCategories(["All", ...names]);
       }
     });

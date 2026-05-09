@@ -37,10 +37,12 @@ export interface AppwriteProduct {
 
 export interface AppwriteCategory {
   $id: string;
-  name: string;
-  slug: string;
-  description: string;
-  image: string;
+  categoryName: string;
+  description?: string;
+  iconUrl?: string;
+  isActive?: boolean;
+  priorityLevel?: number | null;
+  displayOrder?: number | null;
 }
 
 export interface AppwriteUser {
