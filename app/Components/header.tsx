@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Client, Account } from "appwrite";
 import { FaSpinner, FaUserCircle } from "react-icons/fa";
+import { getUserProfile } from "../../lib/appwrite";
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://fra.cloud.appwrite.io/v1")
@@ -16,24 +17,38 @@ const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Check session on mount
+  // Check session + priority on mount / route change
   useEffect(() => {
-    account
-      .get()
-      .then((u) => setUser({ name: u.name, email: u.email }))
-      .catch(() => setUser(null))
-      .finally(() => setAuthLoading(false));
-  }, [pathname]); // re-check whenever route changes (catches post-OAuth redirect)
+    async function checkAuth() {
+      try {
+        const u = await account.get();
+        setUser({ name: u.name, email: u.email });
+
+        // Check priority flag in users collection
+        const profile = await getUserProfile(u.$id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setIsAdmin((profile as any)?.priority === true);
+      } catch {
+        setUser(null);
+        setIsAdmin(false);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+    checkAuth();
+  }, [pathname]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
       await account.deleteSession("current");
       setUser(null);
+      setIsAdmin(false);
       router.push("/Login");
     } catch {
       // ignore
@@ -43,7 +58,7 @@ const Header = () => {
   };
 
   const getLinkClass = (path: string) => {
-    const isActive = pathname === path;
+    const isActive = pathname === path || pathname?.startsWith(path + "/");
     return `hover:text-emerald-200 transition-colors ${
       isActive ? "underline underline-offset-8 decoration-2 text-emerald-100" : ""
     }`;
@@ -73,6 +88,24 @@ const Header = () => {
           Contact
         </Link>
 
+        {/* ── Admin-only links ── */}
+        {isAdmin && (
+          <>
+            <Link
+              href="/Items"
+              className={`${getLinkClass("/Items")} flex items-center gap-1 text-yellow-300 hover:text-yellow-200`}
+            >
+              Items
+            </Link>
+            <Link
+              href="/Orders"
+              className={`${getLinkClass("/Orders")} flex items-center gap-1 text-yellow-300 hover:text-yellow-200`}
+            >
+              Orders
+            </Link>
+          </>
+        )}
+
         {/* Auth button area */}
         {authLoading ? (
           <div className="ml-4 px-6 py-2 rounded-full border border-emerald-600 flex items-center gap-2 opacity-60">
@@ -80,7 +113,7 @@ const Header = () => {
             <span className="text-sm">Loading...</span>
           </div>
         ) : user ? (
-          /* ── Logged in: show user name + logout ── */
+          /* ── Logged in: show user name + dropdown ── */
           <div className="relative ml-4">
             <button
               id="user-menu-btn"
@@ -96,10 +129,36 @@ const Header = () => {
 
             {/* Dropdown */}
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl overflow-hidden z-50 text-gray-800">
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl overflow-hidden z-50 text-gray-800">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  {isAdmin && (
+                    <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">
+                      🛡️ Admin
+                    </span>
+                  )}
                 </div>
+
+                {isAdmin && (
+                  <>
+                    <Link
+                      href="/Items"
+                      onClick={() => setMenuOpen(false)}
+                      className="block w-full text-left px-4 py-3 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors font-medium"
+                    >
+                      📦 Manage Items
+                    </Link>
+                    <Link
+                      href="/Orders"
+                      onClick={() => setMenuOpen(false)}
+                      className="block w-full text-left px-4 py-3 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors font-medium"
+                    >
+                      🧾 View Orders
+                    </Link>
+                    <div className="border-t border-gray-100" />
+                  </>
+                )}
+
                 <button
                   id="logout-btn"
                   onClick={() => {

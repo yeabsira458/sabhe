@@ -13,7 +13,7 @@ export const storage = new Storage(client);
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 export const PRODUCTS_COLLECTION_ID = "products";
 export const CATEGORIES_COLLECTION_ID = "catagories"; // matches actual collection ID
-export const PRODUCT_IMAGES_BUCKET_ID = "product_images";
+export const PRODUCT_IMAGES_BUCKET_ID = "69fddb13000e96d29eac";
 export const USERS_COLLECTION_ID = "users";
 export const ORDERS_COLLECTION_ID = "orders";
 export const ORDER_ITEMS_COLLECTION_ID = "order_items";
@@ -24,13 +24,13 @@ export const WISHLIST_COLLECTION_ID = "wishlist";
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface AppwriteProduct {
   $id: string;
-  title: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
+  title: string;       // required
+  description: string; // required
+  price: number;       // required
+  image: string;       // required — URL from storage bucket 69fddb13000e96d29eac
+  category: string;    // required — must match slug from categories collection
+  featured: boolean;   // required
   inStock: boolean;
-  featured: boolean;
   discount: number;
   rating: number;
 }
