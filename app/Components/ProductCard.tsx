@@ -59,13 +59,29 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </div>
       </div>
 
-      {/* Subtle Info Below */}
-      <div className="flex items-center justify-between p-6 bg-white border-t border-gray-50">
-        <div className="flex flex-col">
-           <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ref. {product.id.slice(-6)}</span>
-           <span className="text-sm font-medium text-gray-900">{product.price.toLocaleString()} ETB</span>
+      {/* Info Below */}
+      <div className="flex flex-col p-6 bg-white border-t border-gray-50 gap-2">
+        {product.description && (
+          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+            {product.description}
+          </p>
+        )}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ref. {product.id.slice(-6)}</span>
+            {product.discount && product.discount > 0 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-emerald-800">
+                  {Math.round(product.price * (1 - product.discount / 100)).toLocaleString()} ETB
+                </span>
+                <span className="text-xs text-gray-400 line-through">{product.price.toLocaleString()} ETB</span>
+              </div>
+            ) : (
+              <span className="text-sm font-medium text-gray-900">{product.price.toLocaleString()} ETB</span>
+            )}
+          </div>
+          <div className="h-px w-8 bg-gray-200" />
         </div>
-        <div className="h-px w-8 bg-gray-200" />
       </div>
     </div>
   );

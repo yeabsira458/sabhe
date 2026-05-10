@@ -8,8 +8,8 @@ const client = new Client()
 const db = new Databases(client);
 
 async function main() {
-  const attrs = await db.listAttributes("69fad4ec001a1f46c410", "users");
-  console.log("=== 'users' collection attributes ===");
+  const attrs = await db.listAttributes("69fad4ec001a1f46c410", "products");
+  console.log("=== 'products' collection attributes ===");
   for (const a of attrs.attributes) {
     console.log(`  ${a.key} | type: ${a.type} | required: ${a.required} | default: ${a.default}`);
   }

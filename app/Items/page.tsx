@@ -19,6 +19,7 @@ type ProductRow = {
   inStock: boolean;
   featured: boolean;
   image: string;
+  description: string;
 };
 
 // ─── Empty form using EXACT attribute names required by the DB ─────────────────
@@ -45,6 +46,8 @@ export default function ItemsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success,    setSuccess]    = useState("");
   const [error,      setError]      = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [descMode, setDescMode] = useState<"ai" | "manual" | null>(null);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -110,6 +113,12 @@ export default function ItemsPage() {
       return;
     }
 
+    if (!formData.description) {
+      setError("Please write a description manually or use the AI Auto-Generate option.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       // 1. Upload image to Appwrite Storage bucket 69fddb13000e96d29eac
       let imageUrl = "";
@@ -170,6 +179,57 @@ export default function ItemsPage() {
     loadProducts();
   };
 
+  const getBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleGenerateAI = async () => {
+    if (!formData.title) {
+      setError("Please enter a basic Title first to generate a better one.");
+      return;
+    }
+    
+    setIsGenerating(true);
+    setError("");
+    setSuccess("");
+    
+    try {
+      let imageBase64 = "";
+      if (imageFile) {
+        imageBase64 = await getBase64(imageFile);
+      }
+
+      const res = await fetch("/api/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productName: formData.title, category: formData.category, imageBase64 })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate AI content");
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        title: data.headline,
+        description: data.description
+      }));
+      setSuccess("✨ AI Successfully generated Title & Description!");
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI generation failed.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // ── Guards ─────────────────────────────────────────────────────────────────
   if (pageLoad) return (
     <div className="min-h-screen bg-[#0a1a17] flex items-center justify-center">
@@ -221,9 +281,19 @@ export default function ItemsPage() {
             {/* Row 1: Title + Category */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1">
-                <label className="text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  Title <span className="text-red-400">*</span>
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-gray-400 text-xs font-bold uppercase tracking-wider">
+                    Title <span className="text-red-400">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAI}
+                    disabled={isGenerating || !formData.title}
+                    className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {isGenerating ? "Generating..." : "✨ Auto-generate AI Details"}
+                  </button>
+                </div>
                 <input
                   required
                   placeholder="e.g. Velvet Royal Sofa"
@@ -301,16 +371,56 @@ export default function ItemsPage() {
               </div>
             </div>
 
-            {/* Description */}
-            <div className="space-y-1">
-              <label className="text-gray-400 text-xs font-bold uppercase tracking-wider">Description</label>
-              <textarea
-                rows={3}
-                placeholder="Detailed product description…"
-                value={formData.description}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white outline-none placeholder-gray-600"
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
+            {/* Description Mode Radio Buttons */}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-6 bg-white/5 p-4 rounded-xl border border-white/10">
+                <span className="text-gray-300 text-sm font-bold">Description Mode:</span>
+                <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="descMode"
+                    checked={descMode === "ai"}
+                    onChange={async () => {
+                      if (!formData.title || !imageFile) {
+                        setError("AI generation requires a Title and a Product Photo to analyze. Please provide both first.");
+                        return;
+                      }
+                      setDescMode("ai");
+                      await handleGenerateAI();
+                    }}
+                    className="accent-emerald-500 w-4 h-4"
+                  />
+                  ✨ AI Auto-Generate
+                </label>
+                <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="descMode"
+                    checked={descMode === "manual"}
+                    onChange={() => setDescMode("manual")}
+                    className="accent-emerald-500 w-4 h-4"
+                  />
+                  ✍️ Write Manually
+                </label>
+              </div>
+
+              {/* Description Textarea */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-gray-400 text-xs font-bold uppercase tracking-wider">Description <span className="text-red-400">*</span></label>
+                  {isGenerating && <div className="text-xs text-emerald-400 flex items-center gap-2"><div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> AI is analyzing image...</div>}
+                </div>
+                <textarea
+                  rows={3}
+                  placeholder={descMode === "ai" ? "AI is generating the description..." : "Detailed product description…"}
+                  value={formData.description}
+                  readOnly={isGenerating || descMode === "ai"}
+                  className={`w-full border border-white/10 rounded-xl px-5 py-3 text-white outline-none focus:ring-2 focus:ring-emerald-500 placeholder-gray-600 ${
+                    descMode === "ai" ? "bg-emerald-900/20 text-emerald-200" : "bg-white/5"
+                  }`}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
             </div>
 
             {/* Checkboxes */}
@@ -395,6 +505,7 @@ export default function ItemsPage() {
                 <tr>
                   <th className="px-6 py-4">Image</th>
                   <th className="px-6 py-4">Title</th>
+                  <th className="px-6 py-4">Description</th>
                   <th className="px-6 py-4">Category</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Featured</th>
@@ -412,6 +523,7 @@ export default function ItemsPage() {
                       }
                     </td>
                     <td className="px-6 py-4 text-white font-medium max-w-[180px] truncate">{p.productName}</td>
+                    <td className="px-6 py-4 text-gray-400 text-xs max-w-[200px] truncate" title={p.description}>{p.description || "—"}</td>
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 bg-white/5 rounded-lg text-gray-300 font-mono text-xs">{p.category}</span>
                     </td>

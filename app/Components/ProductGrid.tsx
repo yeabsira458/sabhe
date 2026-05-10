@@ -85,10 +85,12 @@ function ProductGridCard({ product }: { product: AppwriteProduct }) {
             </div>
           )}
         </div>
-        <h3 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-emerald-800 transition-colors line-clamp-1">
+        <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-emerald-800 transition-colors line-clamp-1">
           {product.title}
         </h3>
-        <p className="text-gray-400 text-sm line-clamp-2 mb-2">{product.description}</p>
+        {product.description && (
+          <p className="text-gray-400 text-xs line-clamp-2 mb-2 leading-relaxed">{product.description}</p>
+        )}
         <div className="flex items-center gap-2">
           <span className="font-bold text-gray-900">
             {discountedPrice
