@@ -3,6 +3,7 @@ import Features from "./Components/Features";
 import Categories from "./Components/Categories";
 import ProductGrid from "./Components/ProductGrid";
 import Slider from "./Components/Slider";
+import Graphics from "./Components/Graphics";
 import Testimonials from "./Components/Testimonials";
 import FAQ from "./Components/FAQ";
 import Newsletter from "./Components/Newsletter";
@@ -16,6 +17,7 @@ export default function Home() {
       <Categories />
       <ProductGrid />
       <Slider />
+      <Graphics />
       <Testimonials />
       <FAQ />
       <Newsletter />

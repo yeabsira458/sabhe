@@ -1,18 +1,27 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { FaArrowRight } from "react-icons/fa";
 import { getProducts } from "../../lib/appwrite";
+import { FaShieldAlt, FaBalanceScale, FaClock, FaPencilRuler, FaGem, FaArrowUpRight } from "react-icons/fa";
+import { FiArrowUpRight } from "react-icons/fi";
 
 export default function Graphics() {
   const [products, setProducts] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [aiImageUrl, setAiImageUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiHeadline, setAiHeadline] = useState("");
+  const [aiColor, setAiColor] = useState("#eab308"); // default yellow-500
 
   useEffect(() => {
     async function fetchGraphics() {
       try {
         const allProducts = await getProducts();
-        const withImages = allProducts.filter((p: any) => p.image).slice(0, 10);
-        setProducts(withImages);
+        const withImages = allProducts.filter((p: any) => p.image);
+        if (withImages.length > 0) {
+          setProducts(withImages);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -20,146 +29,172 @@ export default function Graphics() {
     fetchGraphics();
   }, []);
 
+  const currentProduct = products[currentIndex];
+
+  useEffect(() => {
+    if (!currentProduct) return;
+    
+    // Reset state for new product
+    setAiImageUrl(null);
+    setAiPrompt("");
+    setAiHeadline("");
+    setIsGenerating(true);
+
+    async function generateAiGraphic() {
+      try {
+        const res = await fetch("/api/generate-featured", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageUrl: currentProduct.image,
+            title: currentProduct.title,
+            category: currentProduct.category
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setAiImageUrl(data.aiGraphicUrl);
+          setAiPrompt(data.bgPrompt);
+          setAiHeadline(data.headline);
+          setAiColor(data.accentColor || "#eab308");
+        }
+      } catch (err) {
+        console.error("Failed to generate AI graphic", err);
+      } finally {
+        setIsGenerating(false);
+      }
+    }
+    generateAiGraphic();
+  }, [currentProduct]);
+
+  // Auto-rotate the image every 45 seconds to allow time for AI generation and viewing
+  useEffect(() => {
+    if (products.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % products.length);
+    }, 45000); 
+    return () => clearInterval(timer);
+  }, [products.length]);
+
   if (products.length === 0) return null;
 
-  const mainProduct = products[0];
-  const smallProducts = products.slice(1, 10);
-
-  // Fill empty slots up to 9
-  const displaySmall: any[] = [...smallProducts];
-  while (displaySmall.length < 9) {
-    displaySmall.push({
-      $id: `dummy-${displaySmall.length}`,
-      title: "Coming Soon",
-      price: 0,
-      image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400&h=400",
-      category: "Catalog",
-    });
-  }
-
   return (
-    <section className="bg-white py-16 px-4 md:px-8 border-t border-gray-100">
-      <div className="max-w-[1400px] mx-auto">
+    <section className="bg-white font-sans">
+      <div className="w-full">
+        
+        {/* Dynamic Graphic Poster - Full Width & Square (4:4) */}
+        <div className="relative w-full aspect-square overflow-hidden shadow-2xl group">
+          
+          {/* Background Image (Raw or AI Generated) */}
+          <img 
+            key={aiImageUrl || currentProduct.$id}
+            src={aiImageUrl || currentProduct.image} 
+            alt={currentProduct.title}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 animate-in fade-in zoom-in-105 ${isGenerating ? 'blur-sm scale-105 brightness-50' : ''}`}
+          />
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-8">
-          <h2 className="text-3xl md:text-5xl font-black text-gray-900 uppercase tracking-tighter">New Collection</h2>
-          <div className="flex gap-4 mt-4 md:mt-0 items-center">
-            <span className="text-xs text-gray-400 font-bold uppercase tracking-widest hidden md:block">
-              {products.length} Items Listed
-            </span>
-            <button className="bg-gray-100 hover:bg-emerald-50 text-gray-600 hover:text-emerald-800 transition-colors px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-              Filters <FaArrowRight size={10} />
-            </button>
+          {isGenerating && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
+              <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-white font-bold uppercase tracking-widest animate-pulse">Designing Graphic Style...</p>
+            </div>
+          )}
+          
+          {/* Dark Gradients for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+
+          {/* Top Left Logo Area */}
+          <div className="absolute top-8 left-8 md:top-12 md:left-12 z-20 bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/20">
+            <h2 className="text-xl font-black text-white tracking-tight">SABHE <span style={{ color: aiColor }}>FURNITURE</span></h2>
+            <p className="text-[9px] text-white/80 tracking-[0.3em] uppercase mt-1">Redefining Spaces</p>
           </div>
-        </div>
 
-        {/* Grid: 5 columns, 2 rows */}
-        {/* Row 1: Big (col 1-2) + 3 small (col 3,4,5) */}
-        {/* Row 2: 5 small (col 1-5) */}
-        <div className="grid grid-cols-5 grid-rows-2 gap-4 h-[700px] md:h-[800px]">
-
-          {/* BIG card — col 1-2, row 1-2 */}
-          <Link
-            href={`/product/${mainProduct.$id}`}
-            className="col-span-2 row-span-2 bg-[#f8f9fa] rounded-3xl relative overflow-hidden group shadow-sm hover:shadow-xl transition-all cursor-pointer border border-gray-100"
-          >
-            <img
-              src={mainProduct.image}
-              alt={mainProduct.title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-            <div className="absolute top-6 left-6 z-20 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-[10px] text-white font-bold uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              AI Enhanced
-            </div>
-
-            <div className="absolute left-6 bottom-8 z-20">
-              <h3 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter drop-shadow-md line-clamp-2">
-                {mainProduct.title}
-              </h3>
-              <p className="text-emerald-400 text-sm font-bold mt-2 tracking-widest uppercase">
-                {mainProduct.price.toLocaleString()} ETB
-              </p>
-            </div>
-          </Link>
-
-          {/* 3 small cards on right — row 1, col 3,4,5 */}
-          {displaySmall.slice(0, 3).map((item, idx) => (
-            <Link
-              key={item.$id + "-top-" + idx}
-              href={`/product/${item.$id}`}
-              className="col-span-1 row-span-1 bg-[#f8f9fa] rounded-3xl relative overflow-hidden group shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-emerald-200"
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-10">
-                <h4 className="text-gray-900 text-xs font-black uppercase truncate tracking-wider">{item.title}</h4>
-                {item.price > 0 && (
-                  <p className="text-emerald-800 text-[10px] font-bold mt-0.5">{item.price.toLocaleString()} ETB</p>
-                )}
+          {/* Main Typography */}
+          <div className="absolute top-1/4 left-8 md:left-12 z-20 max-w-lg">
+            <h1 className="text-4xl md:text-6xl font-light text-white leading-tight font-serif italic">
+              Experience
+            </h1>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mt-2">
+              The Pure
+            </h2>
+            <h3 className="text-5xl md:text-7xl font-black mt-2 uppercase tracking-tighter drop-shadow-lg" style={{ color: aiColor }}>
+              {aiHeadline || "DESIGN"}
+            </h3>
+            
+            {/* Dynamic Product Name showing what is currently displayed */}
+            <div className="mt-8 flex flex-col gap-2 items-start">
+              <div className="inline-flex items-center gap-3 bg-black/40 backdrop-blur-md pl-4 pr-6 py-2 rounded-full border border-white/10">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <p className="text-white text-sm font-bold tracking-wider">Product: <span className="text-emerald-300">{currentProduct.title}</span></p>
               </div>
-            </Link>
-          ))}
-
-          {/* 5 small cards — row 2, col 3,4,5 + overflow goes to 2 more but since we only have 3 cols left in row 2 from col 3-5 we need another row */}
-          {/* Actually col 3-5 in row 2 = 3 cells. Plus we already have col 1-2 in row 2 used by big. So row 2 small = displaySmall[3..7] (5 cells, but col 1-2 is big so only 3 remain in row 2) */}
-          {/* We'll just push remaining 6 as a new row below */}
-          {displaySmall.slice(3, 6).map((item, idx) => (
-            <Link
-              key={item.$id + "-bot-" + idx}
-              href={`/product/${item.$id}`}
-              className="col-span-1 row-span-1 bg-[#f8f9fa] rounded-3xl relative overflow-hidden group shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-emerald-200"
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-10">
-                <h4 className="text-gray-900 text-xs font-black uppercase truncate tracking-wider">{item.title}</h4>
-                {item.price > 0 && (
-                  <p className="text-emerald-800 text-[10px] font-bold mt-0.5">{item.price.toLocaleString()} ETB</p>
-                )}
-              </div>
-            </Link>
-          ))}
-
-        </div>
-
-        {/* Row 3 — last 3 small cards in a separate row below */}
-        {displaySmall.length > 6 && (
-          <div className="grid grid-cols-5 gap-4 mt-4 h-[200px] md:h-[250px]">
-            {displaySmall.slice(6, 9).map((item, idx) => (
-              <Link
-                key={item.$id + "-last-" + idx}
-                href={`/product/${item.$id}`}
-                className="col-span-1 row-span-1 bg-[#f8f9fa] rounded-3xl relative overflow-hidden group shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-emerald-200"
-              >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-10">
-                  <h4 className="text-gray-900 text-xs font-black uppercase truncate tracking-wider">{item.title}</h4>
-                  {item.price > 0 && (
-                    <p className="text-emerald-800 text-[10px] font-bold mt-0.5">{item.price.toLocaleString()} ETB</p>
-                  )}
+              {aiPrompt && !isGenerating && (
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+                  <span className="text-gray-300 text-[10px] uppercase tracking-widest font-bold">Concept:</span>
+                  <p className="text-white text-[10px] tracking-widest uppercase italic">{aiPrompt}</p>
                 </div>
-              </Link>
-            ))}
+              )}
+            </div>
           </div>
-        )}
 
+          {/* Bottom Badges Section */}
+          <div className="absolute bottom-20 md:bottom-24 left-0 w-full px-4 md:px-12 z-20">
+            <div className="flex flex-wrap md:flex-nowrap justify-center md:justify-between items-center gap-4 md:gap-8 border-t border-white/20 pt-8">
+              
+              <div className="flex flex-col items-center text-center">
+                <FaShieldAlt className="text-white text-3xl md:text-4xl mb-3 drop-shadow-md" />
+                <p className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">5-Year<br/>Warranty</p>
+              </div>
+              
+              <div className="hidden md:block h-12 w-px bg-white/20" />
+
+              <div className="flex flex-col items-center text-center">
+                <FaBalanceScale className="text-white text-3xl md:text-4xl mb-3 drop-shadow-md" />
+                <p className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">Fair<br/>Pricing</p>
+              </div>
+
+              <div className="hidden md:block h-12 w-px bg-white/20" />
+
+              <div className="flex flex-col items-center text-center">
+                <FaClock className="text-white text-3xl md:text-4xl mb-3 drop-shadow-md" />
+                <p className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">On-Time<br/>Execution</p>
+              </div>
+
+              <div className="hidden md:block h-12 w-px bg-white/20" />
+
+              <div className="flex flex-col items-center text-center">
+                <FaPencilRuler className="text-white text-3xl md:text-4xl mb-3 drop-shadow-md" />
+                <p className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">Custom<br/>Designs</p>
+              </div>
+
+              <div className="hidden md:block h-12 w-px bg-white/20" />
+
+              <div className="flex flex-col items-center text-center">
+                <FaGem className="text-white text-3xl md:text-4xl mb-3 drop-shadow-md" />
+                <p className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">Premium<br/>Materials</p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Bottom Call To Action Bar */}
+          <div className="absolute bottom-0 left-0 w-full bg-black/60 backdrop-blur-lg py-4 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center z-20">
+            <div className="flex items-center gap-4">
+              <span className="bg-yellow-500 text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                Book Consultation
+              </span>
+              <p className="text-white text-xs md:text-sm font-bold tracking-widest">+251 911 234 567</p>
+            </div>
+            
+            <Link href={`/Products/${currentProduct.category.toLowerCase()}`} className="mt-4 md:mt-0 flex items-center gap-2 text-white hover:text-yellow-400 transition-colors cursor-pointer group/btn">
+              <span className="text-sm font-bold uppercase tracking-widest">View Product</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover/btn:bg-yellow-500 group-hover/btn:text-black transition-all">
+                <FiArrowUpRight size={16} />
+              </div>
+            </Link>
+          </div>
+
+        </div>
       </div>
     </section>
   );
