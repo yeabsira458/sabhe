@@ -3,15 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Client, Account } from "appwrite";
+import { account, getUserProfile } from "../../lib/appwrite";
 import { FaSpinner, FaUserCircle } from "react-icons/fa";
-import { getUserProfile } from "../../lib/appwrite";
-
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://fra.cloud.appwrite.io/v1")
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "69fad27100189847d507");
-
-const account = new Account(client);
 
 const Header = () => {
   const pathname = usePathname();

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Client, Databases, ID, Query } from "node-appwrite";
 
 const DATABASE_ID      = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
-const USERS_COLLECTION = "users";
+const USERS_COLLECTION = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID!;
 
 function getAdminClient() {
   return new Client()

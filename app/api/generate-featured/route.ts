@@ -2,70 +2,93 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Configure Cloudinary — note: env vars have some unusual naming in this project
+// Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_Cloud_name,
-  api_key: process.env.NEXT_PUBLIC__API_KEY,
-  api_secret: process.env.NEXT_PUBLIC__API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(geminiApiKey as string);
 
 export async function POST(req: Request) {
+  let step = "initialization";
   try {
-    const { imageUrl, title, category } = await req.json();
+    const body = await req.json();
+    const { imageUrl, title, category } = body;
     console.log("Generating AI graphic for:", title);
 
-    // 1. Use Gemini to decide a DRAMATICALLY different style and Headline
-    // Switch to gemini-2.5-flash for the standard free-tier quota
+    if (!imageUrl) throw new Error("Missing imageUrl");
+
+    // 1. Use Gemini
+    step = "gemini-generation";
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
 
     const promptText = `
-      You are a world-class creative director.
+      You are a world-class creative director for "SABHE FURNITURE".
       Product: "${title}" (${category}).
-      1. Pick ONE unique, distinct interior style (e.g., Cyberpunk, Victorian, Tropical, Industrial, Brutalist, Zen, Retro, Mediterranean, Dark Academia).
-      2. Write a short, punchy 3-word headline for a poster (e.g., "FUURE OF COMFORT", "ROYAL ELEGANCE", "URBAN RAWNESS").
-      3. Pick ONE hex color code that represents this style (e.g., #ff00ff for cyberpunk, #d4af37 for victorian, #10b981 for tropical).
+      
+      Task:
+      1. Pick ONE unique, distinct interior style from: Cyberpunk Neon, Victorian Royal, Tropical Oasis, Industrial Loft, Zen Minimalist, Retro 70s, Mediterranean Coastal, Dark Academia, Scandinavian Hygge, Desert Modern, Art Deco, Brutalist Concrete, Mid-Century Modern.
+      2. Write a short, punchy 3-word headline for a premium lifestyle poster.
+      3. Pick ONE vibrant hex color code for UI accents.
+      4. Create a 10-word background description for AI generation.
 
-      Return a JSON object with keys: "style", "headline", "color".
+      Return JSON: {"style": "...", "headline": "...", "color": "...", "bgPrompt": "..."}
     `;
-    const result = await model.generateContent(promptText);
-    const aiData = JSON.parse(result.response.text());
-    const bgPrompt = aiData.style;
-    const headline = aiData.headline;
-    const accentColor = aiData.color;
 
-    console.log("AI Data:", aiData);
+    const result = await model.generateContent(promptText);
+    const responseText = result.response.text();
+    
+    step = "json-parsing";
+    let aiData;
+    try {
+      aiData = JSON.parse(responseText);
+    } catch (e) {
+      aiData = {
+        style: "Modern",
+        headline: "PURE COMFORT",
+        color: "#eab308",
+        bgPrompt: "luxurious modern living room"
+      };
+    }
 
     // 2. Upload to Cloudinary
-    console.log("Uploading to Cloudinary...");
+    step = "cloudinary-upload";
+    console.log("Uploading to Cloudinary:", imageUrl);
     const uploadRes = await cloudinary.uploader.upload(imageUrl, {
       folder: "sabhe_featured",
       overwrite: true,
       resource_type: "image",
     });
 
-    // 3. Construct the Cloudinary Generative AI URL
-    const cleanPrompt = bgPrompt.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
-    const cloudName = process.env.NEXT_PUBLIC_Cloud_name || "dfdxbbhqr";
+    // 3. Construct URL
+    step = "url-construction";
+    const cleanPrompt = (aiData.bgPrompt || "interior").replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) throw new Error("CLOUDINARY_CLOUD_NAME is not defined");
     const aiGraphicUrl = `https://res.cloudinary.com/${cloudName}/image/upload/e_gen_background_replace:prompt_${cleanPrompt}/v${uploadRes.version}/${uploadRes.public_id}`;
 
     return NextResponse.json({
       success: true,
       aiGraphicUrl,
-      bgPrompt,
-      headline,
-      accentColor
+      bgPrompt: aiData.bgPrompt,
+      headline: aiData.headline,
+      accentColor: aiData.color
     });
 
   } catch (error: any) {
-    console.error("AI Generation Error Detail:", error);
+    console.error(`Error at step [${step}]:`, error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate AI graphic" },
+      { 
+        error: error.message || "Unknown error", 
+        step,
+        success: false 
+      },
       { status: 500 }
     );
   }

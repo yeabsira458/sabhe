@@ -2,18 +2,8 @@
 
 import React, { useState } from "react";
 import { FaGoogle, FaPhone, FaSpinner } from "react-icons/fa";
-import { Client, Account, OAuthProvider } from "appwrite";
-
-const client = new Client()
-  .setEndpoint(
-    process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ||
-      "https://fra.cloud.appwrite.io/v1",
-  )
-  .setProject(
-    process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "69fad27100189847d507",
-  );
-
-const account = new Account(client);
+import { account } from "../../lib/appwrite";
+import { OAuthProvider } from "appwrite";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
