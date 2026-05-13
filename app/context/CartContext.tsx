@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { account } from "@/lib/appwrite";
+import { usePathname } from "next/navigation";
 
 export interface CartItem {
   id: string;
@@ -24,52 +26,75 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [userId, setUserId] = useState<string>("guest");
+  const pathname = usePathname();
 
-  // Load cart from localStorage on mount
+  // 1. Determine User ID on every route change (to catch login/logout)
   useEffect(() => {
-    const savedCart = localStorage.getItem("sabhe_cart");
+    async function getUserId() {
+      try {
+        const u = await account.get();
+        if (u.$id !== userId) {
+          setUserId(u.$id);
+        }
+      } catch {
+        if (userId !== "guest") {
+          setUserId("guest");
+        }
+      }
+    }
+    getUserId();
+  }, [pathname, userId]);
+
+  // 2. Load cart specifically for this userId
+  useEffect(() => {
+    const key = `sabhe_cart_${userId}`;
+    const savedCart = localStorage.getItem(key);
     if (savedCart) {
       try {
         setCart(JSON.parse(savedCart));
       } catch (e) {
         console.error("Failed to parse cart", e);
+        setCart([]);
       }
+    } else {
+      setCart([]);
     }
-  }, []);
+  }, [userId]);
 
-  // Save cart to localStorage on change
+  // 3. Save cart to localStorage whenever it changes for this specific user
   useEffect(() => {
-    localStorage.setItem("sabhe_cart", JSON.stringify(cart));
-  }, [cart]);
+    const key = `sabhe_cart_${userId}`;
+    localStorage.setItem(key, JSON.stringify(cart));
+  }, [cart, userId]);
 
-  const addToCart = (product: any) => {
+  const addToCart = useCallback((product: any) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === (product.id || product.$id));
+      const pId = product.id || product.$id;
+      const existing = prev.find((item) => item.id === pId);
       if (existing) {
         return prev.map((item) =>
-          item.id === (product.id || product.$id)
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+          item.id === pId ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
       return [
         ...prev,
         {
-          id: product.id || product.$id,
-          productName: product.productName || product.title,
-          price: product.price,
-          image: product.image,
+          id: pId,
+          productName: product.productName || product.title || "Unknown Product",
+          price: product.price || 0,
+          image: product.image || "",
           quantity: 1,
         },
       ];
     });
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((item) => item.id !== productId));
-  };
+  }, []);
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId);
       return;
@@ -77,9 +102,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) =>
       prev.map((item) => (item.id === productId ? { ...item, quantity } : item))
     );
-  };
+  }, [removeFromCart]);
 
-  const clearCart = () => setCart([]);
+  const clearCart = useCallback(() => setCart([]), []);
 
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
