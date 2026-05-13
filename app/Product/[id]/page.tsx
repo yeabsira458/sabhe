@@ -20,14 +20,37 @@ export default function ProductDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
+  const [gallery, setGallery] = useState<string[]>([]);
+  const [cleanDescription, setCleanDescription] = useState<string>("");
 
   useEffect(() => {
     async function loadProduct() {
       if (!id) return;
       try {
         const doc = await getProductById(id);
-        setProduct(doc as AppwriteProduct);
-        if (doc?.image) setSelectedImage(doc.image);
+        const prod = doc as AppwriteProduct;
+        setProduct(prod);
+        
+        if (prod?.image) setSelectedImage(prod.image);
+
+        // Parse gallery from description if hidden metadata exists
+        let finalGallery: string[] = [];
+        let finalDesc = prod.description || "";
+
+        if (finalDesc.includes("<!--GALLERY:")) {
+          const parts = finalDesc.split("<!--GALLERY:");
+          finalDesc = parts[0].trim();
+          const galleryStr = parts[1].split("-->")[0];
+          try {
+            finalGallery = JSON.parse(galleryStr);
+          } catch (e) {
+            console.error("Failed to parse gallery metadata", e);
+          }
+        }
+        
+        setGallery(finalGallery);
+        setCleanDescription(finalDesc);
+
       } catch (err) {
         console.error(err);
         setError("Product not found.");
@@ -65,17 +88,13 @@ export default function ProductDetailsPage() {
     ? Math.round(product.price * (1 - product.discount / 100)) 
     : product.price;
 
-  // Use real gallery images if they exist, otherwise fall back to single image
-  const galleryImages = product.gallery && product.gallery.length > 0 
-    ? [product.image, ...product.gallery] 
-    : [product.image];
+  const allImages = [product.image, ...gallery];
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
       
       <main className="max-w-screen-2xl mx-auto px-6 md:px-12 pt-32 pb-24">
         
-        {/* Breadcrumb / Back */}
         <button 
           onClick={() => router.back()}
           className="flex items-center gap-2 text-gray-400 hover:text-emerald-800 transition-colors mb-12 text-[10px] font-black uppercase tracking-[0.3em]"
@@ -85,13 +104,12 @@ export default function ProductDetailsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 xl:gap-24">
           
-          {/* Left: Gallery (7 Cols) */}
+          {/* Left: Gallery */}
           <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-6">
             
-            {/* Thumbnails (Only show if there's more than 1 image) */}
-            {galleryImages.length > 1 && (
+            {allImages.length > 1 && (
               <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto pb-4 md:pb-0 scrollbar-hide max-h-[600px]">
-                {galleryImages.map((img, idx) => (
+                {allImages.map((img, idx) => (
                   <button 
                     key={idx}
                     onClick={() => setSelectedImage(img)}
@@ -103,8 +121,7 @@ export default function ProductDetailsPage() {
               </div>
             )}
 
-            {/* Main Stage */}
-            <div className={`flex-grow relative group ${galleryImages.length === 1 ? "md:ml-0" : ""}`}>
+            <div className={`flex-grow relative group ${allImages.length === 1 ? "md:ml-0" : ""}`}>
               <div className="aspect-[4/5] bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-gray-100/50 p-8 flex items-center justify-center relative">
                 <img 
                   key={selectedImage}
@@ -113,7 +130,6 @@ export default function ProductDetailsPage() {
                   className="w-full h-full object-contain mix-blend-multiply transition-all duration-700 animate-in fade-in zoom-in-95"
                 />
                 
-                {/* Expand Overlay */}
                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-zoom-in">
                    <div className="bg-white/90 backdrop-blur-md p-4 rounded-full shadow-2xl text-emerald-900 transform translate-y-4 group-hover:translate-y-0 transition-transform">
                       <FaExpandAlt size={20} />
@@ -121,7 +137,6 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
               
-              {/* Overlay Details */}
               {product.discount && product.discount > 0 && (
                 <div className="absolute top-8 left-8 bg-emerald-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl z-10">
                   Exclusive -{product.discount}%
@@ -130,7 +145,7 @@ export default function ProductDetailsPage() {
             </div>
           </div>
 
-          {/* Right: Details (5 Cols) */}
+          {/* Right: Details */}
           <div className="lg:col-span-5 flex flex-col justify-center">
             
             <div className="space-y-6 mb-12">
@@ -179,7 +194,7 @@ export default function ProductDetailsPage() {
 
               <div className="space-y-8">
                 <p className="text-gray-500 leading-relaxed text-xl font-light italic border-l-4 border-emerald-100 pl-6 py-2">
-                  "{product.description || "A masterfully crafted piece that blends contemporary silhouette with artisanal soul."}"
+                  "{cleanDescription || "A masterfully crafted piece for your home."}"
                 </p>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

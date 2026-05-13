@@ -143,10 +143,10 @@ export default function ItemsPage() {
         ID.unique(),
         {
           productName: formData.title,
-          description: formData.description,
+          // SMART HACK: Store gallery in description as hidden metadata if 'gallery' attribute is missing
+          description: `${formData.description}\n\n<!--GALLERY:${JSON.stringify(gallery)}-->`,
           price:       formData.price,
           image:       mainImage,
-          gallery:     gallery, // Make sure 'gallery' (string list) attribute exists in Appwrite
           category:    formData.category,
           featured:    formData.featured,
           inStock:     formData.inStock,

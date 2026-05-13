@@ -99,7 +99,7 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="flex flex-col p-6 bg-white border-t border-gray-50 gap-2 flex-grow">
         {product.description && (
           <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed h-8">
-            {product.description}
+            {product.description.split("<!--GALLERY:")[0].trim()}
           </p>
         )}
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
