@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Footer from "../Components/Footer";
-import Newsletter from "../Components/Newsletter";
 import ProductCard, { Product } from "../Components/ProductCard";
 import {
   getProducts,
@@ -155,7 +154,6 @@ export default function CollectionsPage() {
         )}
       </div>
 
-      <Newsletter />
       <Footer />
     </div>
   );

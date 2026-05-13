@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Footer from "../Components/Footer";
-import Newsletter from "../Components/Newsletter";
 import { getCategories, getProducts, AppwriteCategory, AppwriteProduct } from "../../lib/appwrite";
 import Image from "next/image";
 
@@ -139,7 +138,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <Newsletter />
       <Footer />
     </div>
   );

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Footer from "../../Components/Footer";
-import Newsletter from "../../Components/Newsletter";
 import ProductCard, { Product } from "../../Components/ProductCard";
 import { getProducts, AppwriteProduct } from "../../../lib/appwrite";
 
@@ -114,7 +113,6 @@ export default function CategoryPage() {
         )}
       </div>
 
-      <Newsletter />
       <Footer />
     </div>
   );

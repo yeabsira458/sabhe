@@ -56,7 +56,7 @@ export default function LoginPage() {
       <div className="relative z-10 container mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
         {/* Left — Branding + Form */}
         <div className="text-left space-y-6">
-          <h1 className="text-6xl md:text-8xl font-bold text-white tracking-tighter leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tighter leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
             Sabhe <br />
             <span className="text-emerald-400">Furniture</span>
           </h1>

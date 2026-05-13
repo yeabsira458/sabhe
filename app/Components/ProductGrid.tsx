@@ -151,7 +151,7 @@ export default function ProductGrid({
     .slice(0, limit);
 
   return (
-    <section className="bg-white py-16 px-8">
+    <section className="bg-white py-16 px-6 sm:px-8">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

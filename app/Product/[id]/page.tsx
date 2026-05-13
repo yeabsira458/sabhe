@@ -104,7 +104,7 @@ export default function ProductDetailsPage() {
                   <span className="text-gray-900 text-xs font-bold">{product.rating?.toFixed(1) || "5.0"}</span>
                 </div>
               </div>
-              <h1 className="text-5xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter">
+              <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter">
                 {product.productName}
               </h1>
             </div>
@@ -113,7 +113,7 @@ export default function ProductDetailsPage() {
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Investment</span>
                 <div className="flex items-center gap-4">
-                  <span className="text-4xl font-black text-emerald-800">
+                  <span className="text-3xl md:text-4xl font-black text-emerald-800">
                     {discountedPrice.toLocaleString()} <span className="text-sm font-normal">ETB</span>
                   </span>
                   {product.discount && product.discount > 0 && (
@@ -134,7 +134,7 @@ export default function ProductDetailsPage() {
                 "{product.description || "No description available for this exquisite piece."}"
               </p>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4">
                   <div className="p-3 bg-emerald-50 text-emerald-800 rounded-2xl">
                     <FaShieldAlt size={20} />

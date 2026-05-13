@@ -6,7 +6,6 @@ import Slider from "./Components/Slider";
 import Graphics from "./Components/Graphics";
 import Testimonials from "./Components/Testimonials";
 import FAQ from "./Components/FAQ";
-import Newsletter from "./Components/Newsletter";
 import Footer from "./Components/Footer";
 
 export default function Home() {
@@ -20,7 +19,6 @@ export default function Home() {
       <Graphics />
       <Testimonials />
       <FAQ />
-      <Newsletter />
       <Footer />
     </div>
   );
