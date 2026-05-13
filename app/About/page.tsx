@@ -1,14 +1,8 @@
 import React from "react";
 import Footer from "../Components/Footer";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 
 export default function AboutPage() {
-  const stats = [
-    { value: "15+", label: "Years Experience" },
-    { value: "50k+", label: "Happy Customers" },
-    { value: "120+", label: "Store Locations" },
-    { value: "5k+", label: "Furniture Designs" },
-  ];
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pt-24">
@@ -53,17 +47,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-gray-900 py-20 px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-800">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center px-4">
-              <h3 className="text-4xl md:text-5xl font-bold text-yellow-500 mb-2">{stat.value}</h3>
-              <p className="text-gray-400 font-medium">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Our Story / Values */}
       <section className="py-24 px-8 max-w-7xl mx-auto">
@@ -98,6 +81,77 @@ export default function AboutPage() {
               <p className="text-gray-500 leading-relaxed">{val.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* NEW: Contact Section Integration */}
+      <section className="py-24 bg-white px-8 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-16">
+            
+            <div className="lg:w-1/2">
+              <span className="text-emerald-800 font-bold tracking-widest uppercase text-xs mb-4 block">Get In Touch</span>
+              <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter">Visit Our <span className="text-emerald-800">Showroom</span></h2>
+              <p className="text-gray-500 text-lg leading-relaxed mb-12">
+                Experience the quality of our craftsmanship in person. Our design experts are ready to help you find the perfect pieces for your home.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <FaMapMarkerAlt size={16} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Location</h4>
+                    <p className="text-sm text-gray-500 mt-1">123 Furniture Street, Design District, NY 10001, USA</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <FaPhoneAlt size={16} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Phone</h4>
+                    <p className="text-sm text-gray-500 mt-1">+1 (555) 123-4567</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <FaEnvelope size={16} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Email</h4>
+                    <p className="text-sm text-gray-500 mt-1">support@sabhefurniture.com</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <FaClock size={16} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900">Hours</h4>
+                    <p className="text-sm text-gray-500 mt-1">Mon-Fri: 9AM - 8PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:w-1/2">
+               <div className="w-full h-[400px] bg-gray-100 rounded-3xl overflow-hidden shadow-inner border border-gray-100 relative group">
+                  <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d858.6883338923083!2d38.867605263015975!3d9.001825270442886!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b9b004948c09b%3A0xd6652da0049ada4a!2zU2VtaXQgNzIgPSDhiLDhiJrhibUgNzI!5e0!3m2!1sen!2set!4v1778044764540!5m2!1sen!2set" 
+                    className="w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
+                    style={{ border: 0 }} 
+                    allowFullScreen 
+                    loading="lazy" 
+                  ></iframe>
+               </div>
+            </div>
+
+          </div>
         </div>
       </section>
 

@@ -79,9 +79,6 @@ const Header = () => {
         <Link href="/About" className={getLinkClass("/About")}>
           About Us
         </Link>
-        <Link href="/Contact" className={getLinkClass("/Contact")}>
-          Contact
-        </Link>
 
         {/* ── Admin-only links ── */}
         {isAdmin && (
