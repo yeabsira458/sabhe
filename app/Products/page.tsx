@@ -44,7 +44,7 @@ function CategoryCard({ category, products }: { category: AppwriteCategory; prod
         />
       ) : (
         <div className="absolute inset-0 w-full h-full bg-gray-100 flex items-center justify-center">
-          <span className="text-gray-400 font-light">Sem imagem</span>
+          <span className="text-gray-400 font-light">No image available</span>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
@@ -58,7 +58,7 @@ function CategoryCard({ category, products }: { category: AppwriteCategory; prod
           </p>
         )}
         <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-2 group-hover:translate-y-0">
-          {validProducts.length} Peças • Explorar →
+          {validProducts.length} Pieces • Explore →
         </p>
       </div>
     </Link>
@@ -94,20 +94,20 @@ export default function ProductsPage() {
       <div className="pt-40 pb-20 px-8 md:px-16 border-b border-gray-200 bg-white">
         <div className="max-w-screen-2xl mx-auto">
           <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-400 mb-6">
-            Coleção 2026 — Sabhe Móveis
+            2026 Collection — Sabhe Furniture
           </p>
           <h1 className="text-7xl md:text-8xl font-thin tracking-tighter text-gray-900 leading-none mb-12">
-            Nossas <span className="italic font-normal">Categorias</span>
+            Our <span className="italic font-normal">Collections</span>
           </h1>
           <div className="grid md:grid-cols-2 gap-12 items-end">
             <p className="text-lg text-gray-500 max-w-md font-light leading-relaxed">
-              Explore ambientes curados onde a forma encontra a função em sua expressão mais pura. 
-              Escolha uma categoria para ver as peças únicas desenhadas para elevar o seu cotidiano.
+              Discover curated spaces where form meets function in its purest expression. 
+              Select a category to view unique pieces designed to elevate your daily life.
             </p>
             <div className="flex justify-end gap-24">
               <div className="flex flex-col">
                 <span className="text-4xl font-light">{loading ? "-" : categories.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Categorias</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Collections</span>
               </div>
             </div>
           </div>

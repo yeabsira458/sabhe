@@ -13,10 +13,11 @@ export default function Footer() {
             <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-emerald-900 font-bold text-lg">
               F
             </div>
-            <span className="text-xl font-bold tracking-wider">Furniture.</span>
+            <span className="text-xl font-bold tracking-wider text-emerald-100 italic">Sabhe <span className="font-light not-italic">Furniture</span></span>
           </div>
-          <p className="text-emerald-50/70 mb-8 leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          <p className="text-emerald-100/50 mb-8 leading-relaxed text-xs">
+            We craft more than just furniture; we design the backdrops for your most cherished moments. 
+            Sustainable, artisanal, and timeless pieces for the modern home.
           </p>
           <div className="flex items-center gap-3">
             <a href="#" className="w-8 h-8 rounded-full border border-emerald-700 flex items-center justify-center hover:bg-yellow-500 hover:border-yellow-500 hover:text-emerald-900 transition-colors">

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { getProducts } from "../../lib/appwrite";
-import { FaShieldAlt, FaBalanceScale, FaClock, FaPencilRuler, FaGem, FaArrowUpRight } from "react-icons/fa";
+import { FaShieldAlt, FaBalanceScale, FaClock, FaPencilRuler, FaGem } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
 
 export default function Graphics() {

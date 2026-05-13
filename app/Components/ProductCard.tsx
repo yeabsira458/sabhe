@@ -16,6 +16,7 @@ export interface Product {
   rating?: number;
 }
 
+import Link from "next/link";
 import { useCart } from "../context/CartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -24,7 +25,7 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <div className="group relative flex flex-col overflow-hidden bg-[#fafafa] transition-all duration-700 hover:shadow-2xl">
       {/* Editorial Image Wrapper */}
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <Link href={`/Product/${product.id}`} className="relative aspect-[4/5] overflow-hidden block cursor-pointer">
         <img
           src={product.image || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800&h=1000"}
           alt={product.title}
@@ -43,19 +44,20 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Hover Action Overlay */}
         <div className="absolute inset-0 bg-black/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        
-        <div className="absolute bottom-6 right-6 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product);
-            }}
-            className="flex items-center gap-3 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-xl hover:bg-black hover:text-white transition-colors"
-          >
-            <FaShoppingCart size={12} />
-            Add to Order
-          </button>
-        </div>
+      </Link>
+      
+      <div className="absolute top-[40%] right-6 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 z-10">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            addToCart(product);
+          }}
+          className="flex items-center gap-3 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-xl hover:bg-black hover:text-white transition-colors"
+        >
+          <FaShoppingCart size={12} />
+          Add to Order
+        </button>
       </div>
 
       {/* Info Below */}

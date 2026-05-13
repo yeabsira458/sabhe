@@ -27,6 +27,7 @@ function SkeletonProductCard() {
   );
 }
 
+import Link from "next/link";
 import { useCart } from "../context/CartContext";
 
 // ── Single Card ────────────────────────────────────────────────────────────────
@@ -39,80 +40,80 @@ function ProductGridCard({ product }: { product: AppwriteProduct }) {
 
   return (
     <div className="group cursor-pointer">
-      {/* Image Box */}
-      <div className="relative bg-[#f8f9fa] rounded-2xl p-6 mb-4 overflow-hidden h-[300px] flex items-center justify-center transition-shadow group-hover:shadow-lg">
+      <Link href={`/Product/${product.$id}`}>
+        {/* Image Box */}
+        <div className="relative bg-[#f8f9fa] rounded-2xl p-6 mb-4 overflow-hidden h-[300px] flex items-center justify-center transition-shadow group-hover:shadow-lg">
 
-        {/* Badges */}
-        {product.discount && product.discount > 0 ? (
-          <div className="absolute top-4 left-4 bg-emerald-800 text-white text-xs font-bold px-2 py-1 rounded-md z-10 flex items-center gap-1">
-            <FaTag size={9} />
-            -{product.discount}%
-          </div>
-        ) : !product.inStock ? (
-          <div className="absolute top-4 left-4 bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded-md z-10">
-            Out of Stock
-          </div>
-        ) : null}
-
-        {/* Hover actions */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 z-10 duration-300">
-          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm">
-            <FaHeart size={14} />
-          </button>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product);
-            }}
-            className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm"
-          >
-            <FaShoppingBag size={14} />
-          </button>
-        </div>
-
-        {/* Product image — stored in Appwrite bucket 69fddb13000e96d29eac */}
-        <img
-          src={
-            product.image ||
-            "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400&h=400"
-          }
-          alt={product.productName}
-          className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-        />
-      </div>
-
-      {/* Details */}
-      <div className="px-2">
-        <div className="flex justify-between items-center mb-1 text-sm">
-          <span className="text-gray-400 capitalize">{product.category}</span>
-          {product.rating > 0 && (
-            <div className="flex items-center gap-1 text-yellow-500">
-              <FaStar size={12} />
-              <span className="text-gray-900 font-bold text-xs">
-                {product.rating.toFixed(1)}
-              </span>
+          {/* Badges */}
+          {product.discount && product.discount > 0 ? (
+            <div className="absolute top-4 left-4 bg-emerald-800 text-white text-xs font-bold px-2 py-1 rounded-md z-10 flex items-center gap-1">
+              <FaTag size={9} />
+              -{product.discount}%
             </div>
-          )}
+          ) : !product.inStock ? (
+            <div className="absolute top-4 left-4 bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded-md z-10">
+              Out of Stock
+            </div>
+          ) : null}
+
+          {/* Hover actions */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 z-10 duration-300">
+            <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm">
+              <FaHeart size={14} />
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                addToCart(product);
+              }}
+              className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm"
+            >
+              <FaShoppingBag size={14} />
+            </button>
+          </div>
+
+          {/* Product image */}
+          <img
+            src={product.image || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400&h=400"}
+            alt={product.productName}
+            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+          />
         </div>
-        <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-emerald-800 transition-colors line-clamp-1">
-          {product.productName}
-        </h3>
-        {product.description && (
-          <p className="text-gray-400 text-xs line-clamp-2 mb-2 leading-relaxed">{product.description}</p>
-        )}
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-gray-900">
-            {discountedPrice
-              ? `${discountedPrice.toLocaleString()} ETB`
-              : `${product.price.toLocaleString()} ETB`}
-          </span>
-          {discountedPrice && (
-            <span className="text-gray-400 line-through text-sm">
-              {product.price.toLocaleString()} ETB
+
+        {/* Details */}
+        <div className="px-2">
+          <div className="flex justify-between items-center mb-1 text-sm">
+            <span className="text-gray-400 capitalize">{product.category}</span>
+            {product.rating > 0 && (
+              <div className="flex items-center gap-1 text-yellow-500">
+                <FaStar size={12} />
+                <span className="text-gray-900 font-bold text-xs">
+                  {product.rating.toFixed(1)}
+                </span>
+              </div>
+            )}
+          </div>
+          <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-emerald-800 transition-colors line-clamp-1">
+            {product.productName}
+          </h3>
+          {product.description && (
+            <p className="text-gray-400 text-xs line-clamp-2 mb-2 leading-relaxed">{product.description}</p>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-gray-900">
+              {discountedPrice
+                ? `${discountedPrice.toLocaleString()} ETB`
+                : `${product.price.toLocaleString()} ETB`}
             </span>
-          )}
+            {discountedPrice && (
+              <span className="text-gray-400 line-through text-sm">
+                {product.price.toLocaleString()} ETB
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }
