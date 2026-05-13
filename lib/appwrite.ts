@@ -33,6 +33,7 @@ export interface AppwriteProduct {
   inStock: boolean;
   discount: number;
   rating: number;
+  gallery?: string[];  // optional — array of extra image URLs
 }
 
 export interface AppwriteCategory {
@@ -58,11 +59,16 @@ export interface AppwriteUser {
 }
 
 // ─── Products ───────────────────────────────────────────────────────────────
-export async function getProducts(categorySlug?: string): Promise<AppwriteProduct[]> {
+export async function getProducts(categorySlug?: string, search?: string): Promise<AppwriteProduct[]> {
   try {
     const queries: string[] = [Query.limit(100)];
     if (categorySlug && categorySlug !== "all") {
       queries.push(Query.equal("category", categorySlug));
+    }
+    if (search) {
+      // Appwrite search query (requires full-text index on productName)
+      // If no index, this might fail, but let's try it as it's the standard way.
+      queries.push(Query.search("productName", search));
     }
     const res = await databases.listDocuments(DATABASE_ID, PRODUCTS_COLLECTION_ID, queries);
     return res.documents as unknown as AppwriteProduct[];

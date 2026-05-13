@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Footer from "../Components/Footer";
 import ProductCard, { Product } from "../Components/ProductCard";
 import {
@@ -29,7 +30,6 @@ function SkeletonCard() {
   );
 }
 
-// ── Map Appwrite doc → ProductCard shape ───────────────────────────────────────
 function toProduct(doc: AppwriteProduct): Product {
   return {
     id: doc.$id,
@@ -45,14 +45,16 @@ function toProduct(doc: AppwriteProduct): Product {
   };
 }
 
-export default function CollectionsPage() {
+function CollectionsContent() {
+  const searchParams = useSearchParams();
+  const search = searchParams?.get("search") || "";
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load categories from DB
   useEffect(() => {
     getCategories().then((cats: AppwriteCategory[]) => {
       if (cats.length > 0) {
@@ -64,21 +66,20 @@ export default function CollectionsPage() {
     });
   }, []);
 
-  // Load products whenever category changes
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const slug =
-        activeCategory === "All" ? undefined : activeCategory.toLowerCase();
-      const docs = await getProducts(slug);
+      const slug = activeCategory === "All" ? undefined : activeCategory.toLowerCase();
+      // Use both category and search query
+      const docs = await getProducts(slug, search || undefined);
       setProducts(docs.map(toProduct));
     } catch {
       setError("Failed to load collections. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [activeCategory]);
+  }, [activeCategory, search]);
 
   useEffect(() => {
     fetchProducts();
@@ -86,38 +87,35 @@ export default function CollectionsPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pt-24 pb-12">
-
-      {/* Page heading */}
       <div className="max-w-7xl mx-auto px-8 mb-10 text-center">
         <p className="text-gray-400 text-sm font-medium uppercase tracking-widest mb-2">
-          Curated for you
+          {search ? `Showing results for "${search}"` : "Curated for you"}
         </p>
-        <h1 className="text-5xl font-black text-gray-900">
-          Our <span className="text-emerald-800">Collections</span>
+        <h1 className="text-5xl font-black text-gray-900 leading-tight">
+          {search ? "Search" : "Our"} <span className="text-emerald-800">{search ? "Results" : "Collections"}</span>
         </h1>
       </div>
 
-      {/* Category filter pills */}
-      <div className="max-w-7xl mx-auto px-8 mb-12">
-        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
-          {categories.map((category) => (
-            <button
-              key={category}
-              id={`collection-filter-${category.toLowerCase()}`}
-              onClick={() => setActiveCategory(category)}
-              className={`px-8 py-3 rounded-full text-sm font-bold transition-all duration-300 ${
-                activeCategory === category
-                  ? "bg-emerald-800 text-white shadow-lg shadow-emerald-800/30 scale-105"
-                  : "bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 border border-gray-200"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+      {!search && (
+        <div className="max-w-7xl mx-auto px-8 mb-12">
+          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-8 py-3 rounded-full text-sm font-bold transition-all duration-300 ${
+                  activeCategory === category
+                    ? "bg-emerald-800 text-white shadow-lg shadow-emerald-800/30 scale-105"
+                    : "bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 border border-gray-200"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Error state */}
       {error && (
         <div className="max-w-7xl mx-auto px-8 mb-8">
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
@@ -132,7 +130,6 @@ export default function CollectionsPage() {
         </div>
       )}
 
-      {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-8 mb-24">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {loading
@@ -143,13 +140,23 @@ export default function CollectionsPage() {
         </div>
 
         {!loading && !error && products.length === 0 && (
-          <div className="text-center py-20">
+          <div className="text-center py-20 bg-white rounded-[3rem] shadow-sm border border-gray-100">
+            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              No collections found
+              No matches found
             </h3>
-            <p className="text-gray-500">
-              We don&apos;t have any items in this collection yet.
+            <p className="text-gray-500 max-w-sm mx-auto">
+              We couldn't find any items matching your request. Try a different keyword or category.
             </p>
+            <button 
+              onClick={() => {
+                setActiveCategory("All");
+                window.history.pushState({}, "", "/Collections");
+              }}
+              className="mt-8 text-emerald-800 font-bold hover:underline"
+            >
+              Clear all filters
+            </button>
           </div>
         )}
       </div>
@@ -159,3 +166,14 @@ export default function CollectionsPage() {
   );
 }
 
+export default function CollectionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-emerald-800 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <CollectionsContent />
+    </Suspense>
+  );
+}

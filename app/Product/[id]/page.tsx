@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getProductById, AppwriteProduct } from "../../../lib/appwrite";
-import { FaShoppingCart, FaArrowLeft, FaShieldAlt, FaTruck, FaRegHeart, FaStar } from "react-icons/fa";
+import { FaShoppingCart, FaArrowLeft, FaShieldAlt, FaTruck, FaHeart, FaRegHeart, FaStar, FaExpandAlt } from "react-icons/fa";
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import Header from "../../Components/header";
 import Footer from "../../Components/Footer";
 
@@ -13,10 +14,12 @@ export default function ProductDetailsPage() {
   const id = params?.id as string;
   const router = useRouter();
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const [product, setProduct] = useState<AppwriteProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string>("");
 
   useEffect(() => {
     async function loadProduct() {
@@ -24,6 +27,7 @@ export default function ProductDetailsPage() {
       try {
         const doc = await getProductById(id);
         setProduct(doc as AppwriteProduct);
+        if (doc?.image) setSelectedImage(doc.image);
       } catch (err) {
         console.error(err);
         setError("Product not found.");
@@ -56,150 +60,171 @@ export default function ProductDetailsPage() {
     );
   }
 
+  const isFav = isInWishlist(product.$id);
   const discountedPrice = product.discount && product.discount > 0 
     ? Math.round(product.price * (1 - product.discount / 100)) 
     : product.price;
 
+  // Use real gallery images if they exist, otherwise fall back to single image
+  const galleryImages = product.gallery && product.gallery.length > 0 
+    ? [product.image, ...product.gallery] 
+    : [product.image];
+
   return (
     <div className="min-h-screen bg-[#fafafa]">
       
-      <main className="max-w-7xl mx-auto px-6 pt-32 pb-24">
+      <main className="max-w-screen-2xl mx-auto px-6 md:px-12 pt-32 pb-24">
         
         {/* Breadcrumb / Back */}
         <button 
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-400 hover:text-emerald-800 transition-colors mb-10 text-xs font-bold uppercase tracking-widest"
+          className="flex items-center gap-2 text-gray-400 hover:text-emerald-800 transition-colors mb-12 text-[10px] font-black uppercase tracking-[0.3em]"
         >
           <FaArrowLeft size={10} /> Back to Collection
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 xl:gap-24">
           
-          {/* Left: Premium Image Gallery (Single for now) */}
-          <div className="relative group">
-            <div className="aspect-square bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-gray-100 p-8 md:p-12 flex items-center justify-center">
-              <img 
-                src={product.image} 
-                alt={product.productName} 
-                className="w-full h-full object-contain mix-blend-multiply transition-transform duration-1000 group-hover:scale-110"
-              />
-            </div>
+          {/* Left: Gallery (7 Cols) */}
+          <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-6">
             
-            {/* Overlay Details */}
-            {product.discount && product.discount > 0 && (
-              <div className="absolute top-8 left-8 bg-emerald-800 text-white px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-lg">
-                Save {product.discount}%
+            {/* Thumbnails (Only show if there's more than 1 image) */}
+            {galleryImages.length > 1 && (
+              <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto pb-4 md:pb-0 scrollbar-hide max-h-[600px]">
+                {galleryImages.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setSelectedImage(img)}
+                    className={`relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${selectedImage === img ? "border-emerald-800 scale-105 shadow-lg" : "border-transparent opacity-60 hover:opacity-100"}`}
+                  >
+                    <img src={img} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
-          </div>
 
-          {/* Right: Editorial Product Details */}
-          <div className="flex flex-col justify-center space-y-10">
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="text-emerald-800 text-xs font-bold uppercase tracking-[0.3em]">{product.category}</span>
-                <div className="flex items-center gap-1 text-yellow-500">
-                  <FaStar size={10} />
-                  <span className="text-gray-900 text-xs font-bold">{product.rating?.toFixed(1) || "5.0"}</span>
+            {/* Main Stage */}
+            <div className={`flex-grow relative group ${galleryImages.length === 1 ? "md:ml-0" : ""}`}>
+              <div className="aspect-[4/5] bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-gray-100/50 p-8 flex items-center justify-center relative">
+                <img 
+                  key={selectedImage}
+                  src={selectedImage} 
+                  alt={product.productName} 
+                  className="w-full h-full object-contain mix-blend-multiply transition-all duration-700 animate-in fade-in zoom-in-95"
+                />
+                
+                {/* Expand Overlay */}
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-zoom-in">
+                   <div className="bg-white/90 backdrop-blur-md p-4 rounded-full shadow-2xl text-emerald-900 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                      <FaExpandAlt size={20} />
+                   </div>
                 </div>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter">
-                {product.productName}
+              
+              {/* Overlay Details */}
+              {product.discount && product.discount > 0 && (
+                <div className="absolute top-8 left-8 bg-emerald-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl z-10">
+                  Exclusive -{product.discount}%
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Details (5 Cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-center">
+            
+            <div className="space-y-6 mb-12">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">{product.category}</span>
+                  <div className="flex items-center gap-1 text-yellow-500">
+                    <FaStar size={10} />
+                    <span className="text-gray-900 text-xs font-bold">{product.rating?.toFixed(1) || "5.0"}</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => isFav ? removeFromWishlist(product.$id) : addToWishlist(product)}
+                  className={`p-3 rounded-full transition-all duration-300 ${isFav ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:text-red-400"}`}
+                >
+                  {isFav ? <FaHeart size={18} /> : <FaRegHeart size={18} />}
+                </button>
+              </div>
+              
+              <h1 className="text-5xl md:text-7xl font-black text-gray-900 leading-[0.9] tracking-tighter italic">
+                {product.productName.split(' ')[0]}<br/>
+                <span className="text-emerald-800 not-italic">{product.productName.split(' ').slice(1).join(' ')}</span>
               </h1>
             </div>
 
-            <div className="flex items-end gap-4 border-b border-gray-100 pb-10">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Investment</span>
-                <div className="flex items-center gap-4">
-                  <span className="text-3xl md:text-4xl font-black text-emerald-800">
-                    {discountedPrice.toLocaleString()} <span className="text-sm font-normal">ETB</span>
-                  </span>
-                  {product.discount && product.discount > 0 && (
-                    <span className="text-xl text-gray-300 line-through font-light">
-                      {product.price.toLocaleString()} ETB
+            <div className="space-y-12 mb-12">
+              <div className="flex items-end gap-6 border-b border-gray-100 pb-12">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-400 uppercase font-black tracking-[0.2em] mb-3">Investment Value</span>
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-5xl font-black text-emerald-900">
+                      {discountedPrice.toLocaleString()} <span className="text-sm font-normal italic">ETB</span>
                     </span>
-                  )}
+                    {product.discount && product.discount > 0 && (
+                      <span className="text-xl text-gray-300 line-through font-light">
+                        {product.price.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="ml-auto flex items-center gap-2 text-emerald-600 bg-emerald-50/50 border border-emerald-100 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                  {product.inStock ? "Available Now" : "Pre-Order Only"}
                 </div>
               </div>
-              <div className="ml-auto flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                {product.inStock ? "In Stock" : "Limited Availability"}
+
+              <div className="space-y-8">
+                <p className="text-gray-500 leading-relaxed text-xl font-light italic border-l-4 border-emerald-100 pl-6 py-2">
+                  "{product.description || "A masterfully crafted piece that blends contemporary silhouette with artisanal soul."}"
+                </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-emerald-200 transition-colors">
+                    <div className="p-3 bg-emerald-50 text-emerald-800 rounded-2xl">
+                      <FaShieldAlt size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">5-Year Warranty</h4>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Guaranteed Quality</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4 hover:border-blue-200 transition-colors">
+                    <div className="p-3 bg-blue-50 text-blue-800 rounded-2xl">
+                      <FaTruck size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">Safe Delivery</h4>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Addis & Regions</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <p className="text-gray-500 leading-relaxed text-lg font-light italic">
-                "{product.description || "No description available for this exquisite piece."}"
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 text-emerald-800 rounded-2xl">
-                    <FaShieldAlt size={20} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-900">5-Year Warranty</h4>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Guaranteed Quality</p>
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4">
-                  <div className="p-3 bg-blue-50 text-blue-800 rounded-2xl">
-                    <FaTruck size={20} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-900">Safe Delivery</h4>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Addis Ababa & Regions</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button 
                 onClick={() => addToCart(product)}
-                className="flex-grow bg-emerald-800 hover:bg-emerald-700 text-white py-6 rounded-3xl font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-4 transition-all shadow-2xl shadow-emerald-800/20 active:scale-95"
+                className="flex-[3] bg-emerald-900 hover:bg-emerald-800 text-white py-7 rounded-3xl font-black uppercase tracking-[0.3em] text-xs flex items-center justify-center gap-4 transition-all shadow-2xl shadow-emerald-900/20 active:scale-95 group"
               >
-                <FaShoppingCart />
-                Add to Cart
+                <FaShoppingCart className="group-hover:translate-x-1 transition-transform" />
+                Reserve Piece
               </button>
-              <button className="w-20 bg-white border border-gray-100 hover:bg-gray-50 text-gray-400 hover:text-red-500 rounded-3xl flex items-center justify-center transition-all shadow-sm active:scale-95">
-                <FaRegHeart size={24} />
+              <button 
+                onClick={() => isFav ? removeFromWishlist(product.$id) : addToWishlist(product)}
+                className={`flex-1 py-7 rounded-3xl flex items-center justify-center transition-all shadow-sm active:scale-95 border border-gray-100 ${isFav ? "bg-red-50 text-red-500" : "bg-white text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
+              >
+                {isFav ? <FaHeart size={24} /> : <FaRegHeart size={24} />}
               </button>
-            </div>
-
-            <div className="pt-10 flex items-center justify-between">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
-                    <img src={`https://i.pravatar.cc/100?u=${i + product.$id}`} alt="User" />
-                  </div>
-                ))}
-                <div className="w-10 h-10 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-800 shadow-sm">
-                  +12
-                </div>
-              </div>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Recent interests in this item</p>
             </div>
 
           </div>
         </div>
 
       </main>
-
-      {/* Recommended Section (Simplified placeholder) */}
-      <section className="bg-white py-24 px-6 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-black text-gray-900 mb-12 uppercase tracking-tighter italic">Complementary Pieces</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="aspect-[4/5] bg-gray-50 rounded-3xl animate-pulse" />
-            <div className="aspect-[4/5] bg-gray-50 rounded-3xl animate-pulse" />
-            <div className="aspect-[4/5] bg-gray-50 rounded-3xl animate-pulse" />
-            <div className="aspect-[4/5] bg-gray-50 rounded-3xl animate-pulse" />
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </div>

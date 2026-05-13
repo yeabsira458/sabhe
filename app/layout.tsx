@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./Components/header";
 import AuthSync from "./Components/AuthSync";
+import WhatsAppButton from "./Components/WhatsAppButton";
+import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,10 +19,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Sabhe Furniture Store",
-  description: "Your one-stop shop for quality furniture",
+  description: "Modern, artisanal furniture for your home. Sustainable quality from Addis Ababa.",
 };
-
-import { CartProvider } from "./context/CartContext";
 
 export default function RootLayout({
   children,
@@ -28,12 +29,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <CartProvider>
-          <AuthSync />
-          <Header />
-          {children}
-        </CartProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <WishlistProvider>
+          <CartProvider>
+            <AuthSync />
+            <Header />
+            {children}
+            <WhatsAppButton />
+          </CartProvider>
+        </WishlistProvider>
       </body>
     </html>
   );
