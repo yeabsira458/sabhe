@@ -27,8 +27,11 @@ function SkeletonProductCard() {
   );
 }
 
+import { useCart } from "../context/CartContext";
+
 // ── Single Card ────────────────────────────────────────────────────────────────
 function ProductGridCard({ product }: { product: AppwriteProduct }) {
+  const { addToCart } = useCart();
   const discountedPrice =
     product.discount && product.discount > 0
       ? Math.round(product.price * (1 - product.discount / 100))
@@ -56,7 +59,13 @@ function ProductGridCard({ product }: { product: AppwriteProduct }) {
           <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm">
             <FaHeart size={14} />
           </button>
-          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              addToCart(product);
+            }}
+            className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 shadow-sm"
+          >
             <FaShoppingBag size={14} />
           </button>
         </div>
@@ -67,7 +76,7 @@ function ProductGridCard({ product }: { product: AppwriteProduct }) {
             product.image ||
             "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400&h=400"
           }
-          alt={product.title}
+          alt={product.productName}
           className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
         />
       </div>
@@ -86,7 +95,7 @@ function ProductGridCard({ product }: { product: AppwriteProduct }) {
           )}
         </div>
         <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-emerald-800 transition-colors line-clamp-1">
-          {product.title}
+          {product.productName}
         </h3>
         {product.description && (
           <p className="text-gray-400 text-xs line-clamp-2 mb-2 leading-relaxed">{product.description}</p>

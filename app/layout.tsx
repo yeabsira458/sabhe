@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "Your one-stop shop for quality furniture",
 };
 
+import { CartProvider } from "./context/CartContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,9 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <AuthSync />
-        <Header />
-        {children}
+        <CartProvider>
+          <AuthSync />
+          <Header />
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

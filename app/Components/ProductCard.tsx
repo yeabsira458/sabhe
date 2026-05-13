@@ -16,12 +16,11 @@ export interface Product {
   rating?: number;
 }
 
-interface ProductCardProps {
-  product: Product;
-  onAddToCart?: (product: Product) => void;
-}
+import { useCart } from "../context/CartContext";
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
+
   return (
     <div className="group relative flex flex-col overflow-hidden bg-[#fafafa] transition-all duration-700 hover:shadow-2xl">
       {/* Editorial Image Wrapper */}
@@ -49,7 +48,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onAddToCart?.(product);
+              addToCart(product);
             }}
             className="flex items-center gap-3 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-xl hover:bg-black hover:text-white transition-colors"
           >

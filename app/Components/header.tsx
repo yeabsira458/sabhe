@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { account, getUserProfile } from "../../lib/appwrite";
-import { FaSpinner, FaUserCircle } from "react-icons/fa";
+import { FaSpinner, FaUserCircle, FaShoppingCart } from "react-icons/fa";
+import { useCart } from "../context/CartContext";
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { itemCount } = useCart();
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -98,6 +100,16 @@ const Header = () => {
             </Link>
           </>
         )}
+
+        {/* ── Cart Icon ── */}
+        <Link href="/Cart" className="relative group p-2 ml-2 transition-transform hover:scale-110 active:scale-95">
+          <FaShoppingCart size={22} className="group-hover:text-emerald-100" />
+          {itemCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-emerald-800 shadow-lg animate-in zoom-in duration-300">
+              {itemCount}
+            </span>
+          )}
+        </Link>
 
         {/* Auth button area */}
         {authLoading ? (

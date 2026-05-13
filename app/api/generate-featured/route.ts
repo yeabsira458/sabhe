@@ -57,10 +57,19 @@ export async function POST(req: Request) {
       };
     }
 
-    // 2. Upload to Cloudinary
+    // 2. Upload to Cloudinary (using buffer to avoid Appwrite URL access issues)
+    step = "image-download";
+    console.log("Fetching image buffer from:", imageUrl);
+    const imageRes = await fetch(imageUrl);
+    if (!imageRes.ok) throw new Error(`Failed to download image from ${imageUrl}`);
+    
+    const arrayBuffer = await imageRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Image = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+
     step = "cloudinary-upload";
-    console.log("Uploading to Cloudinary:", imageUrl);
-    const uploadRes = await cloudinary.uploader.upload(imageUrl, {
+    console.log("Uploading buffer to Cloudinary...");
+    const uploadRes = await cloudinary.uploader.upload(base64Image, {
       folder: "sabhe_featured",
       overwrite: true,
       resource_type: "image",
