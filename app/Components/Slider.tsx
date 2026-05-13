@@ -1,76 +1,103 @@
 "use client";
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { getCategories, getProducts, AppwriteCategory, AppwriteProduct } from "../../lib/appwrite";
 
-const collection = [
-  {
-    id: 1,
-    title: "Dining Table",
-    image: "https://images.unsplash.com/photo-1617806118233-18e1c0945620?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Elegant wooden craft.",
-  },
-  {
-    id: 2,
-    title: "Sofa",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Comfortable modern living.",
-  },
-  {
-    id: 3,
-    title: "Chair",
-    image: "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Ergonomic and stylish.",
-  },
-  {
-    id: 4,
-    title: "Bedside Table",
-    image: "https://images.unsplash.com/photo-1532372576444-ea95f036c196?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Compact storage.",
-  },
-  {
-    id: 5,
-    title: "Wardrobe",
-    image: "https://images.unsplash.com/photo-1558997519-83ea9252edf8?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Organized storage.",
-  },
-  {
-    id: 6,
-    title: "Kitchen Set",
-    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Modern kitchen design.",
-  },
-  {
-    id: 7,
-    title: "Coffee Table",
-    image: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Perfect living room centerpiece.",
-  },
-  {
-    id: 8,
-    title: "Bookshelf",
-    image: "https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Stylish display and storage.",
-  },
-  {
-    id: 9,
-    title: "Dresser",
-    image: "https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Spacious bedroom organization.",
-  },
-  {
-    id: 10,
-    title: "TV Stand",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=400&h=300",
-    desc: "Modern entertainment center.",
-  },
-];
+function CategoryCard({ 
+  category, 
+  products 
+}: { 
+  category: AppwriteCategory; 
+  products: AppwriteProduct[] 
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Filter products that belong to this category and have images
+  const categoryProducts = products.filter(
+    (p) => p.category.toLowerCase() === category.categoryName.toLowerCase() && p.image
+  );
+
+  useEffect(() => {
+    if (categoryProducts.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % categoryProducts.length);
+    }, 3000); // Change image every 3 seconds
+    return () => clearInterval(interval);
+  }, [categoryProducts.length]);
+
+  const displayImage = categoryProducts.length > 0 
+    ? categoryProducts[currentIndex].image 
+    : (category.iconUrl || "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=800");
+
+  return (
+    <Link
+      href={`/Products/${category.categoryName.toLowerCase()}`}
+      className="group flex-shrink-0 w-[280px] sm:w-[320px] snap-center bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden border border-fuchsia-100/50 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 cursor-pointer relative"
+    >
+      <div className="relative h-72 w-full overflow-hidden">
+        <img
+          key={displayImage}
+          src={displayImage}
+          alt={category.categoryName}
+          className="h-full w-full object-cover transition-all duration-1000 animate-in fade-in zoom-in-110 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        {/* Action Label */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+          <div className="bg-white/90 backdrop-blur-sm text-fuchsia-900 px-6 py-2 rounded-full font-semibold text-sm shadow-lg hover:bg-fuchsia-600 hover:text-white transition-colors">
+            Explore Collection
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 relative bg-white">
+        <div className="flex justify-between items-center mb-1">
+          <h2 className="text-xl font-bold text-gray-900 group-hover:text-fuchsia-600 transition-colors duration-300">
+            {category.categoryName}
+          </h2>
+          <span className="bg-fuchsia-50 text-fuchsia-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+            {categoryProducts.length} Items
+          </span>
+        </div>
+        <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+          {category.description || `Explore our high-quality selection of ${category.categoryName.toLowerCase()} furniture.`}
+        </p>
+        
+        <div className="h-0.5 w-0 bg-fuchsia-500 mt-5 transition-all duration-500 group-hover:w-full rounded-full"></div>
+      </div>
+    </Link>
+  );
+}
 
 function Slider() {
+  const [categories, setCategories] = useState<AppwriteCategory[]>([]);
+  const [products, setProducts] = useState<AppwriteProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
   const dragStartScroll = useRef(0);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [cats, prods] = await Promise.all([
+          getCategories(),
+          getProducts(),
+        ]);
+        setCategories(cats);
+        setProducts(prods);
+      } catch (err) {
+        console.error("Failed to fetch data for slider:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   // Update thumb position when cards scroll
   const handleScroll = useCallback(() => {
@@ -150,8 +177,8 @@ function Slider() {
       
       <div className="flex justify-between items-end px-8 md:px-16 mb-8">
         <div>
-          <h2 className="text-3xl font-extrabold text-fuchsia-950 tracking-tight">Featured Collection</h2>
-          <p className="text-gray-500 mt-2">Discover our beautifully crafted furniture pieces.</p>
+          <h2 className="text-3xl font-extrabold text-fuchsia-950 tracking-tight">Browse by Category</h2>
+          <p className="text-gray-500 mt-2">Discover our curated furniture collections.</p>
         </div>
         
         {/* Navigation Buttons */}
@@ -185,60 +212,41 @@ function Slider() {
           ::-webkit-scrollbar { display: none; }
         `}} />
         
-        {collection.map((item, index) => (
-          <div
-            key={index}
-            className="group flex-shrink-0 w-[280px] sm:w-[320px] snap-center bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden border border-fuchsia-100/50 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 cursor-pointer relative"
-          >
-            <div className="relative h-72 w-full overflow-hidden">
-              <img
-                src={item.image}
-                alt={item.title}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              {/* Quick View Button on Hover */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                <button className="bg-white/90 backdrop-blur-sm text-fuchsia-900 px-6 py-2 rounded-full font-semibold text-sm shadow-lg hover:bg-fuchsia-600 hover:text-white transition-colors">
-                  Quick View
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 relative bg-white">
-              <h2 className="text-xl font-bold mb-1 text-gray-800 group-hover:text-fuchsia-600 transition-colors duration-300">
-                {item.title}
-              </h2>
-              <p className="text-sm text-gray-500 line-clamp-2">{item.desc}</p>
-              
-              {/* Animated Bottom Line */}
-              <div className="h-0.5 w-0 bg-fuchsia-500 mt-5 transition-all duration-500 group-hover:w-full rounded-full"></div>
-            </div>
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-[280px] sm:w-[320px] h-[400px] bg-gray-100 rounded-3xl animate-pulse" />
+          ))
+        ) : categories.length === 0 ? (
+          <div className="w-full text-center py-20 text-gray-400">
+            No categories found in the database.
           </div>
-        ))}
+        ) : (
+          categories.map((category) => (
+            <CategoryCard 
+              key={category.$id} 
+              category={category} 
+              products={products} 
+            />
+          ))
+        )}
       </div>
 
       {/* Scroll Progress Track */}
       <div className="px-8 md:px-16 pt-2 pb-8">
         <div className="flex items-center gap-4">
-          {/* Left icon hint */}
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-fuchsia-400 flex-shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
 
-          {/* Track */}
           <div
             ref={trackRef}
             onClick={onTrackClick}
             className="relative flex-1 h-[6px] bg-fuchsia-100 rounded-full cursor-pointer group/track"
           >
-            {/* Filled portion */}
             <div
               className="absolute inset-y-0 left-0 bg-gradient-to-r from-fuchsia-400 to-fuchsia-600 rounded-full transition-all duration-150 ease-out"
               style={{ width: `${(scrollProgress * 75) + 25}%` }}
             />
-            {/* Draggable Thumb */}
             <div
               onMouseDown={onThumbMouseDown}
               className="absolute top-1/2 -translate-y-1/2 h-5 w-5 bg-white border-2 border-fuchsia-500 rounded-full shadow-[0_2px_8px_rgba(192,38,211,0.4)] cursor-grab active:cursor-grabbing transition-all duration-150 ease-out hover:scale-125 hover:border-fuchsia-600 hover:shadow-[0_4px_12px_rgba(192,38,211,0.5)]"
@@ -249,15 +257,13 @@ function Slider() {
             />
           </div>
 
-          {/* Right icon hint */}
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-fuchsia-400 flex-shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
         </div>
 
-        {/* Helper label */}
         <p className="text-center text-xs text-fuchsia-300 mt-3 tracking-wider font-medium select-none">
-          drag to explore &nbsp;·&nbsp; {collection.length} items
+          drag to explore &nbsp;·&nbsp; {categories.length} Collections
         </p>
       </div>
 
