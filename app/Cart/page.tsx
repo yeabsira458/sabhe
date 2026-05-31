@@ -20,6 +20,7 @@ export default function CartPage() {
     phone: "",
     note: ""
   });
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   const handleCheckout = async () => {
     if (!shippingInfo.address || !shippingInfo.phone) {
@@ -49,7 +50,7 @@ export default function CartPage() {
         shippingAddress: shippingInfo.address,
         shippingCity: shippingInfo.city,
         phone: shippingInfo.phone,
-        paymentMethod: "cash",
+        paymentMethod: paymentMethod,
         note: shippingInfo.note || `Items: ${cart.map(i => `${i.productName} (x${i.quantity})`).join(", ")}`,
       });
 
@@ -217,6 +218,64 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {/* Payment Methods */}
+              <div className="space-y-2 mb-8">
+                <label className="text-[10px] uppercase tracking-widest text-emerald-300/60 font-bold">Payment Method</label>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    { id: "cash", label: "Cash on Delivery", desc: "Pay upon receiving your furniture" },
+                    { id: "telebirr", label: "Telebirr", desc: "Pay securely via Telebirr mobile wallet" },
+                    { id: "cbe", label: "CBE (Commercial Bank)", desc: "Bank transfer via Commercial Bank of Ethiopia" },
+                    { id: "abyssinia", label: "Abyssinia (BoA)", desc: "Bank transfer via Bank of Abyssinia" },
+                    { id: "santimpay", label: "Santim Pay", desc: "Pay using Santim Pay payment gateway" },
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(method.id)}
+                      className={`flex flex-col text-left px-4 py-3 rounded-xl border transition-all ${
+                        paymentMethod === method.id
+                          ? "bg-white/10 border-emerald-400 text-white font-semibold"
+                          : "bg-white/5 border-white/10 text-emerald-100/60 hover:bg-white/[0.07]"
+                      }`}
+                    >
+                      <span className="text-xs font-black tracking-wider uppercase flex items-center justify-between w-full">
+                        {method.label}
+                        {paymentMethod === method.id && <span className="w-2 h-2 rounded-full bg-emerald-400" />}
+                      </span>
+                      <span className="text-[10px] opacity-60 mt-0.5">{method.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Details / Instructions */}
+              {paymentMethod !== "cash" && (
+                <div className="mb-8 p-4 bg-white/5 border border-emerald-400/20 rounded-2xl text-xs space-y-2 leading-relaxed">
+                  <p className="font-bold text-emerald-300 uppercase tracking-widest text-[9px]">Payment Instructions</p>
+                  {paymentMethod === "telebirr" && (
+                    <p className="text-emerald-100/80">
+                      Please send the total amount of <span className="font-bold text-white">{cartTotal.toLocaleString()} ETB</span> to our Telebirr merchant number: <span className="font-mono font-bold text-white text-sm block mt-1">0911223344</span> and add your phone number in the transaction note.
+                    </p>
+                  )}
+                  {paymentMethod === "cbe" && (
+                    <p className="text-emerald-100/80">
+                      Please transfer the total amount of <span className="font-bold text-white">{cartTotal.toLocaleString()} ETB</span> to our Commercial Bank of Ethiopia (CBE) account: <span className="font-mono font-bold text-white text-sm block mt-1">1000123456789</span> Account Name: <span className="text-white font-semibold">Sabhe Furniture</span>.
+                    </p>
+                  )}
+                  {paymentMethod === "abyssinia" && (
+                    <p className="text-emerald-100/80">
+                      Please transfer the total amount of <span className="font-bold text-white">{cartTotal.toLocaleString()} ETB</span> to our Bank of Abyssinia account: <span className="font-mono font-bold text-white text-sm block mt-1">987654321</span> Account Name: <span className="text-white font-semibold">Sabhe Furniture</span>.
+                    </p>
+                  )}
+                  {paymentMethod === "santimpay" && (
+                    <p className="text-emerald-100/80">
+                      You will pay <span className="font-bold text-white">{cartTotal.toLocaleString()} ETB</span> using Santim Pay gateway. We will contact you with a payment link to complete the secure payment.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-emerald-200/60 text-sm">
                   <span>Subtotal</span>
@@ -258,7 +317,7 @@ export default function CartPage() {
               </button>
 
               <p className="mt-6 text-[10px] text-center text-emerald-200/40 uppercase tracking-widest leading-loose">
-                Pay with Cash on Delivery
+                Payment: {paymentMethod === "cash" ? "Cash on Delivery" : paymentMethod === "telebirr" ? "Telebirr Wallet" : paymentMethod === "cbe" ? "CBE Transfer" : paymentMethod === "abyssinia" ? "Abyssinia Transfer" : "Santim Pay Gateway"}
               </p>
             </div>
           </div>

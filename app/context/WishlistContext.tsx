@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { AppwriteProduct } from "../../lib/appwrite";
+import { AppwriteProduct, account } from "../../lib/appwrite";
+import { usePathname } from "next/navigation";
 
 interface WishlistContextType {
   wishlistItems: AppwriteProduct[];
@@ -15,23 +16,47 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export const WishlistProvider = ({ children }: { children: React.ReactNode }) => {
   const [wishlistItems, setWishlistItems] = useState<AppwriteProduct[]>([]);
+  const [userId, setUserId] = useState<string>("guest");
+  const pathname = usePathname();
 
-  // Load from localStorage on mount
+  // 1. Determine User ID on every route change
   useEffect(() => {
-    const saved = localStorage.getItem("sabhe_wishlist");
+    async function getUserId() {
+      try {
+        const u = await account.get();
+        if (u.$id !== userId) {
+          setUserId(u.$id);
+        }
+      } catch {
+        if (userId !== "guest") {
+          setUserId("guest");
+        }
+      }
+    }
+    getUserId();
+  }, [pathname, userId]);
+
+  // 2. Load wishlist specifically for this userId
+  useEffect(() => {
+    const key = `sabhe_wishlist_${userId}`;
+    const saved = localStorage.getItem(key);
     if (saved) {
       try {
         setWishlistItems(JSON.parse(saved));
       } catch (e) {
         console.error("Failed to load wishlist", e);
+        setWishlistItems([]);
       }
+    } else {
+      setWishlistItems([]);
     }
-  }, []);
+  }, [userId]);
 
-  // Save to localStorage whenever wishlist changes
+  // 3. Save wishlist to localStorage whenever it changes for this specific user
   useEffect(() => {
-    localStorage.setItem("sabhe_wishlist", JSON.stringify(wishlistItems));
-  }, [wishlistItems]);
+    const key = `sabhe_wishlist_${userId}`;
+    localStorage.setItem(key, JSON.stringify(wishlistItems));
+  }, [wishlistItems, userId]);
 
   const addToWishlist = (product: AppwriteProduct) => {
     setWishlistItems((prev) => {

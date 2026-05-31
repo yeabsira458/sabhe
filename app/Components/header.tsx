@@ -52,6 +52,11 @@ const Header = () => {
       await account.deleteSession("current");
       setUser(null);
       setIsAdmin(false);
+      
+      // Clear guest data so the next person on this device starts fresh
+      localStorage.removeItem("sabhe_cart_guest");
+      localStorage.removeItem("sabhe_wishlist_guest");
+      
       router.push("/Login");
     } catch {
       // ignore
@@ -68,37 +73,42 @@ const Header = () => {
     }
   };
 
-  const getLinkClass = (path: string) => {
+  const getLinkClass = (path: string, isMobile = false) => {
     const isActive = pathname === path || pathname?.startsWith(path + "/");
+    if (isMobile) {
+      return `hover:text-emerald-800 transition-colors ${
+        isActive ? "underline underline-offset-8 decoration-2 text-emerald-900 font-bold" : "text-gray-900"
+      }`;
+    }
     return `hover:text-emerald-200 transition-colors ${
       isActive ? "underline underline-offset-8 decoration-2 text-emerald-100 font-bold" : ""
     }`;
   };
 
-  const NavLinks = () => (
+  const NavLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
     <>
-      <Link href="/Products" className={getLinkClass("/Products")}>
+      <Link href="/Products" className={getLinkClass("/Products", isMobile)}>
         Products
       </Link>
-      <Link href="/Collections" className={getLinkClass("/Collections")}>
+      <Link href="/Collections" className={getLinkClass("/Collections", isMobile)}>
         Collections
       </Link>
-      <Link href="/About" className={getLinkClass("/About")}>
+      <Link href="/About" className={getLinkClass("/About", isMobile)}>
         About Us
       </Link>
 
       {/* ── Admin Links ── */}
       {isAdmin && (
-        <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8 border-t lg:border-t-0 border-emerald-800 pt-6 lg:pt-0 mt-2 lg:mt-0 lg:ml-4">
+        <div className={`flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8 border-t lg:border-t-0 ${isMobile ? "border-gray-200" : "border-emerald-800"} pt-6 lg:pt-0 mt-2 lg:mt-0 lg:ml-4`}>
           <Link 
             href="/Items" 
-            className={`${getLinkClass("/Items")} flex items-center gap-2 text-yellow-500 hover:text-yellow-300 font-black italic tracking-widest`}
+            className={`${getLinkClass("/Items", isMobile)} flex items-center gap-2 ${isMobile ? "text-yellow-600 hover:text-yellow-700" : "text-yellow-500 hover:text-yellow-300"} font-black italic tracking-widest`}
           >
             <FaBox size={14} className="not-italic" /> Items
           </Link>
           <Link 
             href="/Orders" 
-            className={`${getLinkClass("/Orders")} flex items-center gap-2 text-yellow-500 hover:text-yellow-300 font-black italic tracking-widest`}
+            className={`${getLinkClass("/Orders", isMobile)} flex items-center gap-2 ${isMobile ? "text-yellow-600 hover:text-yellow-700" : "text-yellow-500 hover:text-yellow-300"} font-black italic tracking-widest`}
           >
             <FaClipboardList size={14} className="not-italic" /> Orders
           </Link>
@@ -229,11 +239,11 @@ const Header = () => {
       </nav>
 
       {/* Mobile Sidebar */}
-      <div className={`fixed inset-0 bg-emerald-950/80 backdrop-blur-md z-[60] lg:hidden transition-all duration-500 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        <div className={`fixed top-0 left-0 h-full w-[300px] bg-emerald-900 p-8 transform transition-transform duration-500 ease-out shadow-2xl ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] lg:hidden transition-all duration-500 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+        <div className={`fixed top-0 left-0 h-screen w-[300px] bg-white flex flex-col p-8 transform transition-transform duration-500 ease-out shadow-2xl ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex items-center justify-between mb-12">
-             <h2 className="font-black text-2xl tracking-tighter italic">SABHE<span className="text-yellow-500 not-italic">.</span></h2>
-             <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-emerald-800 rounded-full transition-colors">
+             <h2 className="font-black text-2xl tracking-tighter italic text-[#0a1a17]">SABHE<span className="text-yellow-500 not-italic">.</span></h2>
+             <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
                <FaTimes size={20} />
              </button>
           </div>
@@ -244,26 +254,26 @@ const Header = () => {
               placeholder="Search..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-emerald-800/50 border border-emerald-700 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-emerald-400"
+              className="w-full bg-gray-100 border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-600 focus:bg-white"
              />
-             <FaSearch className="absolute right-5 top-5 text-emerald-500" size={14} />
+             <FaSearch className="absolute right-5 top-5 text-gray-400" size={14} />
           </form>
 
           <nav className="flex flex-col gap-8 text-xl font-black uppercase tracking-widest italic">
-             <NavLinks />
+             <NavLinks isMobile />
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-emerald-800 flex flex-col gap-4">
+          <div className="mt-auto pt-8 border-t border-gray-200 flex flex-col gap-4">
              {user ? (
                <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <FaUserCircle size={32} className="text-emerald-400" />
+                    <FaUserCircle size={32} className="text-emerald-800" />
                     <div>
-                      <p className="font-bold text-sm truncate w-40">{user.name || "User"}</p>
-                      <p className="text-[10px] text-emerald-500 font-bold uppercase">{isAdmin ? "Administrator" : "Customer"}</p>
+                      <p className="font-bold text-sm text-gray-900 truncate w-40">{user.name || "User"}</p>
+                      <p className="text-[10px] text-emerald-800 font-bold uppercase">{isAdmin ? "Administrator" : "Customer"}</p>
                     </div>
                   </div>
-                  <button onClick={handleLogout} className="w-full py-4 bg-red-500/10 text-red-500 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-500/20 transition-colors">Sign Out</button>
+                  <button onClick={handleLogout} className="w-full py-4 bg-red-500/10 text-red-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-500/20 transition-colors">Sign Out</button>
                </div>
              ) : (
                <Link href="/Login" className="block w-full py-5 bg-yellow-500 text-emerald-950 rounded-2xl text-center font-black uppercase tracking-[0.2em] text-xs">Sign In</Link>

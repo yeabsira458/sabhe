@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "./Components/header";
 import AuthSync from "./Components/AuthSync";
-import WhatsAppButton from "./Components/WhatsAppButton";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 
@@ -20,6 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sabhe Furniture Store",
   description: "Modern, artisanal furniture for your home. Sustainable quality from Addis Ababa.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -35,7 +38,6 @@ export default function RootLayout({
             <AuthSync />
             <Header />
             {children}
-            <WhatsAppButton />
           </CartProvider>
         </WishlistProvider>
       </body>

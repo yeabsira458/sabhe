@@ -13,41 +13,44 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { productName, category, imageBase64 } = body;
+    const { productName, category, imagesBase64 } = body;
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Switch to gemini-2.5-flash for the standard free-tier quota (typically 1,500 RPD)
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash-latest",
       generationConfig: { responseMimeType: "application/json" }
     });
+
+    const hasImages = imagesBase64 && Array.isArray(imagesBase64) && imagesBase64.length > 0;
 
     const promptText = `
 You are an expert luxury furniture copywriter for 'Sabhe Furniture'.
 The user has provided a basic product name: "${productName || 'Unknown Furniture'}"
 And its category is: "${category || 'General Furniture'}"
 
-${imageBase64 ? "I have also provided an image of the furniture. Please analyze the image carefully. Focus on its type, material, colors, style, and unique features." : ""}
+${hasImages ? `I have provided ${imagesBase64.length} different angles of the furniture. Please analyze them carefully. Focus on its construction, textures, exact colors, and the overall "soul" of the piece from all angles shown.` : ""}
 
 Generate two things:
-1. headline: A short, catchy 3-word title (e.g., 'Modern Kitchen Elegance', 'Velvet Royal Sofa') suitable for a store catalog.
-2. description: A 2-sentence elegant and luxurious description for this furniture catalog item. If an image is provided, ensure the description accurately describes the materials, colors, and design of the furniture shown.
+1. headline: A short, catchy 3-word title suitable for a luxury store catalog.
+2. description: A 2-sentence elegant, high-end description. Mention specific details you see in the photos to prove you analyzed all angles.
 
 Return the response as a JSON object with keys "headline" and "description".
 `;
 
     const contentParts: any[] = [promptText];
 
-    if (imageBase64) {
-      const matches = imageBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-      if (matches) {
-        contentParts.push({
-          inlineData: {
-            data: matches[2],
-            mimeType: matches[1]
-          }
-        });
-      }
+    if (hasImages) {
+      imagesBase64.forEach((base64: string) => {
+        const matches = base64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+        if (matches) {
+          contentParts.push({
+            inlineData: {
+              data: matches[2],
+              mimeType: matches[1]
+            }
+          });
+        }
+      });
     }
 
     const result = await model.generateContent(contentParts);

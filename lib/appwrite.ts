@@ -61,7 +61,10 @@ export interface AppwriteUser {
 // ─── Products ───────────────────────────────────────────────────────────────
 export async function getProducts(categorySlug?: string, search?: string): Promise<AppwriteProduct[]> {
   try {
-    const queries: string[] = [Query.limit(100)];
+    const queries: string[] = [
+      Query.equal("inStock", true), // Only show items visible to customers
+      Query.limit(100),
+    ];
     if (categorySlug && categorySlug !== "all") {
       queries.push(Query.equal("category", categorySlug));
     }
@@ -91,6 +94,7 @@ export async function getProductById(id: string): Promise<AppwriteProduct | null
 export async function getFeaturedProducts(): Promise<AppwriteProduct[]> {
   try {
     const res = await databases.listDocuments(DATABASE_ID, PRODUCTS_COLLECTION_ID, [
+      Query.equal("inStock", true), // Only show items visible to customers
       Query.equal("featured", true),
       Query.limit(8),
     ]);

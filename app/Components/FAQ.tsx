@@ -12,7 +12,7 @@ export default function FAQ() {
     },
     {
       question: "What payment methods do you accept?",
-      answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+      answer: "We accept a variety of secure and convenient local payment methods. You can pay seamlessly via Telebirr, Commercial Bank of Ethiopia (CBE) transfer, Bank of Abyssinia (BoA) transfer, or the Santim Pay payment gateway. We also fully support Cash on Delivery, allowing you to pay upon receiving and inspecting your premium furniture.",
     },
     {
       question: "Can I track my furniture delivery?",

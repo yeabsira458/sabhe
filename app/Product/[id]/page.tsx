@@ -115,7 +115,11 @@ export default function ProductDetailsPage() {
                     onClick={() => setSelectedImage(img)}
                     className={`relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${selectedImage === img ? "border-emerald-800 scale-105 shadow-lg" : "border-transparent opacity-60 hover:opacity-100"}`}
                   >
-                    <img src={img} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover" />
+                    {(img.toLowerCase().includes(".mov") || img.toLowerCase().includes(".mp4")) ? (
+                      <video src={img} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={img} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -123,12 +127,21 @@ export default function ProductDetailsPage() {
 
             <div className={`flex-grow relative group ${allImages.length === 1 ? "md:ml-0" : ""}`}>
               <div className="aspect-[4/5] bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-gray-100/50 p-8 flex items-center justify-center relative">
-                <img 
-                  key={selectedImage}
-                  src={selectedImage} 
-                  alt={product.productName} 
-                  className="w-full h-full object-contain mix-blend-multiply transition-all duration-700 animate-in fade-in zoom-in-95"
-                />
+                {(selectedImage.toLowerCase().includes(".mov") || selectedImage.toLowerCase().includes(".mp4")) ? (
+                  <video 
+                    key={selectedImage}
+                    src={selectedImage} 
+                    className="w-full h-full object-contain rounded-3xl"
+                    muted loop autoPlay playsInline
+                  />
+                ) : (
+                  <img 
+                    key={selectedImage}
+                    src={selectedImage} 
+                    alt={product.productName} 
+                    className="w-full h-full object-contain mix-blend-multiply transition-all duration-700 animate-in fade-in zoom-in-95"
+                  />
+                )}
                 
                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-zoom-in">
                    <div className="bg-white/90 backdrop-blur-md p-4 rounded-full shadow-2xl text-emerald-900 transform translate-y-4 group-hover:translate-y-0 transition-transform">
